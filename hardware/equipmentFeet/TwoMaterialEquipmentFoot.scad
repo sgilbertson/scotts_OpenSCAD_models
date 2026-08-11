@@ -1,5 +1,6 @@
-// Parametric Equipment Foot Generator v28 - Explicit Profile Master
+// Parametric Equipment Foot Generator v29 - MakerWorld Production Ready
 // Designed for Dual-Material Co-Printing (e.g., TPU + PETG)
+// Fully protected against breaking via Customizer assertions
 
 /* [Matrix View Controls] */
 // Select the visual layout
@@ -31,8 +32,8 @@ interlock_width = 3.0;  // How far the dovetail wedge flairs outward into the ba
 interlock_angle = 20;   // Dovetail wedge angle (degrees)
 
 /* [Fillets (TPU Tip)] */
-// Supports fine decimal increments (e.g. 0.5, 1.25). Set to 0 for perfectly sharp corners.
-outer_fillet_radius = 1.0; // [0:0.1:10]
+// Supports fine decimal increments. Set to 0 for perfectly sharp corners.
+outer_fillet_radius = 2.0; // [0:0.1:10]
 inner_fillet_radius = 2.0; // [0:0.1:10]
 
 /* [Hidden] */
@@ -67,6 +68,18 @@ cone_angle = atan2((r_cone_bot - r_cone_top), tpu_actual_height);
 // Strict under-cut dovetail coordinates
 r_lock_neck = r_step_edge - interlock_width;
 r_lock_floor = r_lock_neck + (lip_height * tan(interlock_angle));
+
+// --- MakerWorld Input Validation Asserts (Safety Limits) ---
+max_inner_radius = r_cone_top - r_clear;
+max_outer_radius = tpu_actual_height / cos(cone_angle);
+
+// Halts compilation instantly if a user types a value that collapses the top surface flat
+assert(inner_fillet_radius < max_inner_radius, 
+       str("ERROR: Inner Fillet (", inner_fillet_radius, "mm) is too large! Maximum allowed is ", max_inner_radius, "mm based on current diameters."));
+
+// Halts compilation if the outer fillet is longer than the sloped side face itself
+assert(outer_fillet_radius < max_outer_radius, 
+       str("ERROR: Outer Fillet (", outer_fillet_radius, "mm) is too large! Maximum allowed is ", max_outer_radius, "mm based on current height."));
 
 // --- Core Master Matrix Switchboard ---
 if (model_view == "2D Sketch") {
