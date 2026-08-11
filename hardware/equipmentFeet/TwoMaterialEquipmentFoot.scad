@@ -1,4 +1,4 @@
-// Parametric Equipment Foot Generator v29 - MakerWorld Production Ready
+// Parametric Equipment Foot Generator v32 - Fixed Cross-Section Layout
 // Designed for Dual-Material Co-Printing (e.g., TPU + PETG)
 // Fully protected against breaking via Customizer assertions
 
@@ -47,7 +47,7 @@ cs_rad_diff = (base_countersink_dia - base_hole_dia) / 2;
 calculated_cs_depth = cs_rad_diff / tan(countersink_angle / 2);
 pocket_depth = (fastener_type == "washer") ? washer_depth : calculated_cs_depth;
 
-// Mathematical offset to eliminate coincident face errors and 2-manifold warnings
+// Mathematical offset to eliminate coincident face errors and preview calculation bugs
 eps = 0.01; 
 overlap_offset = (part_selection == "both") ? eps : 0;
 
@@ -73,11 +73,9 @@ r_lock_floor = r_lock_neck + (lip_height * tan(interlock_angle));
 max_inner_radius = r_cone_top - r_clear;
 max_outer_radius = tpu_actual_height / cos(cone_angle);
 
-// Halts compilation instantly if a user types a value that collapses the top surface flat
 assert(inner_fillet_radius < max_inner_radius, 
        str("ERROR: Inner Fillet (", inner_fillet_radius, "mm) is too large! Maximum allowed is ", max_inner_radius, "mm based on current diameters."));
 
-// Halts compilation if the outer fillet is longer than the sloped side face itself
 assert(outer_fillet_radius < max_outer_radius, 
        str("ERROR: Outer Fillet (", outer_fillet_radius, "mm) is too large! Maximum allowed is ", max_outer_radius, "mm based on current height."));
 
@@ -85,9 +83,13 @@ assert(outer_fillet_radius < max_outer_radius,
 if (model_view == "2D Sketch") {
     render_2d_layer_selection();
 } else if (model_view == "3D Cross Section") {
-    difference() {
-        render_3d_layer_selection();
-        translate([-100, -100, -50]) cube(); 
+    // The render() keyword forces OpenSCAD to compile the meshes cleanly on F5 Preview
+    render(convexity = 10) {
+        difference() {
+            render_3d_layer_selection();
+            // A precise half-cut cube that slices cleanly across the absolute Y=0 line
+            translate([-100, 0, -50]) cube([200, 100, 100]); 
+        }
     }
 } else {
     render_3d_layer_selection();
@@ -105,12 +107,14 @@ module render_2d_layer_selection() {
 }
 
 module render_3d_layer_selection() {
-    if (part_selection == "base" || part_selection == "both") {
-        rotate_extrude() base_plate_2d_profile();
-    } 
-    if (part_selection == "upper" || part_selection == "both") {
-        translate([0, 0, base_height])
-            rotate_extrude() upper_dampener_2d_profile();
+    union() {
+        if (part_selection == "base" || part_selection == "both") {
+            rotate_extrude() base_plate_2d_profile();
+        } 
+        if (part_selection == "upper" || part_selection == "both") {
+            translate([0, 0, base_height])
+                rotate_extrude() upper_dampener_2d_profile();
+        }
     }
 }
 
@@ -134,18 +138,14 @@ module base_plate_2d_profile() {
 module upper_dampener_2d_profile() {
     color("DimGray");
     
-    // Exact geometric included angles to map the dynamic tangent contact points
     half_angle = (90 + cone_angle) / 2;
     dist_to_tangent = outer_fillet_radius / tan(half_angle);
     
-    // Circle center offsets for true tangency alignment
     cx = r_cone_top - dist_to_tangent;
     cy = tpu_actual_height - outer_fillet_radius;
     
     difference() {
-        // Master Continuous Outline Profile (FreeCAD Style Sketch Method)
         union() {
-            // Main puzzle anchor base and cone profile hull
             polygon([
                 [r_clear, 0],                            
                 [r_clear, -lip_height - overlap_offset], 
@@ -154,24 +154,20 @@ module upper_dampener_2d_profile() {
                 [r_step_edge, 0],                        
                 [r_cone_bot, 0], 
                 
-                // Dynamic outer point: moves inward when fillet is active to make room for the round edge
                 (outer_fillet_radius > 0.0) ? 
                     [r_cone_top + (outer_fillet_radius * sin(cone_angle)) - (dist_to_tangent * sin(cone_angle)), 
                      tpu_actual_height - (outer_fillet_radius * cos(cone_angle)) + (dist_to_tangent * cos(cone_angle))] 
                     : [r_cone_top, tpu_actual_height],
                 
-                // Flat top tangent transition point
                 (outer_fillet_radius > 0.0) ? [r_cone_top - dist_to_tangent, tpu_actual_height] : [r_cone_top, tpu_actual_height],
                 [r_clear, tpu_actual_height]     
             ]);
             
-            // Adds the positive rolling tangent fillet circle directly to the profile wall boundary
             if (outer_fillet_radius > 0.0) {
                 translate([cx, cy]) circle(r=outer_fillet_radius);
             }
         }
         
-        // --- 2D Inner Fillet Trimming ---
         if (inner_fillet_radius > 0.0) {
             translate([r_clear + inner_fillet_radius, tpu_actual_height - inner_fillet_radius])
             difference() {
