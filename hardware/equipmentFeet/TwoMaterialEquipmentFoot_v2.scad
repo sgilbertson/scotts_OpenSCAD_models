@@ -1,4 +1,4 @@
-// Parametric Equipment Foot Generator v36 - Absolute Multi-Part Coordinate Fixed
+// Parametric Equipment Foot Generator v39 - TPU-Wrapped Interlock (Version 2.2)
 // Designed for Dual-Material Co-Printing (e.g., TPU + PETG)
 // Fully protected against breaking via Customizer assertions
 
@@ -28,9 +28,9 @@ upper_top_diameter = 25; // The diameter of the flat top surface tip of the TPU 
 upper_height = 15;      // Height of the flexible TPU upper body
 
 /* [Sloped Mechanical Interlock] */
-lip_height = 3.5;       // Depth of the interlocking cavity pocket
-interlock_width = 3.0;  // How far the dovetail wedge flairs outward into the base
-interlock_angle = 20;   // Dovetail wedge angle (degrees)
+lip_height = 3.5;       // How far the TPU skirt extends down around the PETG base
+interlock_width = 3.0;  // Radial width of the sloped PETG/TPU interlock
+interlock_angle = 20;   // Interlock face angle (degrees)
 lip_tolerance = 0.0;    // Clearance gap (Keep 0 for dual-nozzle co-printing)
 
 /* [Fillets (TPU Tip)] */
@@ -59,16 +59,28 @@ r_base = base_diameter / 2;
 
 // Dynamic step lock: aligned perfectly flush to the outer perimeter
 r_step_edge = r_base - base_shoulder_width; 
-r_cone_bot = r_step_edge; 
 r_cone_top = upper_top_diameter / 2;
 tpu_actual_height = upper_height - lip_height;
 
-// Slope angle calculation of the outer cone face relative to the vertical axis
-cone_angle = atan2((r_cone_bot - r_cone_top), tpu_actual_height);
+// The outside TPU taper now runs from the very bottom of the TPU skirt
+// (at exactly the base radius) all the way to the top.  Therefore the
+// taper angle is based on the full TPU height, including the skirt.
+cone_angle = atan2((r_step_edge - r_cone_top), upper_height);
+
+// Radius of that same continuous taper where it crosses the PETG top plane.
+// This is intentionally smaller than r_base so the TPU cannot project beyond
+// the PETG footprint at the bottom of the skirt.
+r_cone_bot = r_step_edge - (lip_height * tan(cone_angle));
 
 // Strict under-cut dovetail coordinates
 r_lock_neck = r_step_edge - interlock_width;
-r_lock_floor = r_lock_neck + (lip_height * tan(interlock_angle));
+// Positive interlock_angle now makes the PETG tongue flare inward toward its lower edge,
+// matching the intended undercut direction.  (Version 2 originally had this sign reversed.)
+r_lock_floor = r_lock_neck - (lip_height * tan(interlock_angle));
+
+// The maximum TPU radius is locked to the PETG/base radius.  This makes the
+// TPU skirt meet the PETG exactly at the outside edge rather than overhanging it.
+r_skirt_outer = r_base;
 
 // --- MakerWorld Input Validation Asserts (Safety Limits) ---
 max_inner_radius = r_cone_top - r_clear;
@@ -122,23 +134,32 @@ module render_3d_layer_selection() {
 // --- Component 2D Profile Geometries ---
 
 module base_plate_2d_profile() {
-    pocket_bottom_y = base_height - lip_height - pocket_depth;
+    // Version 2 reverses the interlock from version 1:
+    // the PETG base is shorter at its outside edge, while the TPU skirt
+    // comes down around it.  The PETG still rises to full base_height
+    // around the fastener pocket so the mounting geometry is unchanged.
+    pocket_bottom_y = base_height - pocket_depth;
     
     color("DarkOrange")
     polygon([
-        [r_hole, -eps],                                             
-        [r_base, -eps],                                             
-        [r_base, base_height],                                      
-        [r_step_edge + lip_tolerance, base_height],                 
-        [r_lock_neck + lip_tolerance, base_height],                 
-        [r_lock_floor + lip_tolerance, base_height - lip_height],   
-        [r_clear, base_height - lip_height],                        
-        
-        (fastener_type == "countersink") ? 
-            [r_hole, pocket_bottom_y] : 
-            [r_clear, pocket_bottom_y],                             
-            
-        [r_hole, pocket_bottom_y]                                   
+        [r_hole, -eps],
+        [r_base, -eps],
+
+        // Short outer PETG wall.
+        [r_base, base_height - lip_height + lip_tolerance],
+
+        // Sloped tongue under the TPU wrap.
+        [r_lock_floor + lip_tolerance, base_height - lip_height + lip_tolerance],
+        [r_lock_neck + lip_tolerance, base_height],
+
+        // Full-height PETG remains around the screw pocket.
+        [r_clear, base_height],
+
+        (fastener_type == "countersink") ?
+            [r_hole, pocket_bottom_y] :
+            [r_clear, pocket_bottom_y],
+
+        [r_hole, pocket_bottom_y]
     ]);
 }
 
@@ -153,12 +174,20 @@ module upper_dampener_2d_profile() {
     difference() {
         union() {
             polygon([
-                [r_clear, 0],                            
-                [r_clear, -lip_height - overlap_offset], 
-                [r_lock_floor - overlap_offset, -lip_height - overlap_offset], 
-                [r_lock_neck - overlap_offset, 0],       
-                [r_step_edge, 0],                        
-                [r_cone_bot, 0], 
+                // Flat TPU/PETG interface at full base height.
+                [r_clear, 0],
+                [r_lock_neck - overlap_offset, 0],
+
+                // TPU wraps DOWN around the outside of the PETG tongue.
+                [r_lock_floor - overlap_offset, -lip_height - overlap_offset],
+
+                // Keep the outside surface on the SAME taper all the way down
+                // to the bottom of the TPU skirt; no cylindrical section here.
+                [r_skirt_outer, -lip_height - overlap_offset],
+
+                // Main tapered TPU body.  This point lies on the same straight line
+                // from [r_base,-lip_height] to the upper tapered surface.
+                [r_cone_bot, 0],
                 
                 (outer_fillet_radius > 0.0) ? 
                     [r_cone_top + (outer_fillet_radius * sin(cone_angle)) - (dist_to_tangent * sin(cone_angle)), 
@@ -166,7 +195,7 @@ module upper_dampener_2d_profile() {
                     : [r_cone_top, tpu_actual_height],
                 
                 (outer_fillet_radius > 0.0) ? [r_cone_top - dist_to_tangent, tpu_actual_height] : [r_cone_top, tpu_actual_height],
-                [r_clear, tpu_actual_height]     
+                [r_clear, tpu_actual_height]
             ]);
             
             if (outer_fillet_radius > 0.0) {
