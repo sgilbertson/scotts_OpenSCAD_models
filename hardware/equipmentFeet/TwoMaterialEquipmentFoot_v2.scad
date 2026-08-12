@@ -1,10 +1,10 @@
-// Parametric Equipment Foot Generator v39 - TPU-Wrapped Interlock (Version 2.2)
+// Parametric Equipment Foot Generator v41 - TPU-Wrapped Interlock (Version 2.4)
 // Designed for Dual-Material Co-Printing (e.g., TPU + PETG)
 // Fully protected against breaking via Customizer assertions
 
 /* [Matrix View Controls] */
 // Select the visual layout
-model_view = "3D Cross Section"; // [3D Assembled, 3D Cross Section, 2D Sketch]
+model_view = "3D Cutaway"; // [3D Assembled, 3D Cutaway, 2D Sketch]
 // Choose which components are visible
 part_selection = "both"; // [base: PETG only, upper: TPU only, both: Full Assembly]
 
@@ -39,7 +39,13 @@ outer_fillet_radius = 2.0; // [0:0.1:10]
 inner_fillet_radius = 2.0; // [0:0.1:10]
 
 /* [Hidden] */
-$fn = 96; 
+$fn = 96;
+
+// Visual-only separation between PETG and TPU in 3D Cutaway mode.
+// Each profile is inset by half this amount, producing approximately this
+// much visible space at their shared interface. It does NOT affect the
+// assembled view or exported base/upper parts.
+cutaway_material_gap = 0.16; 
 base_shoulder_width = 0.0; 
 
 // --- Consolidated Math & Boundary Calculations ---
@@ -95,13 +101,14 @@ assert(outer_fillet_radius < max_outer_radius,
 // --- Core Master Matrix Switchboard ---
 if (model_view == "2D Sketch") {
     render_2d_layer_selection();
-} else if (model_view == "3D Cross Section") {
-    render(convexity = 10) {
-        difference() {
-            render_3d_layer_selection();
-            translate([-100, 0, -50]) cube(); 
-        }
-    }
+} else if (model_view == "3D Cutaway" || model_view == "3D Cross Section") {
+    // A cutaway removes one complete half of the rotational model to expose
+    // the internal PETG/TPU interface and fastener pocket.  In this view only,
+    // each material profile is inset very slightly so a narrow light-colored
+    // seam remains between the two materials.  The actual printable geometry
+    // is unchanged.
+    render(convexity = 10)
+        render_3d_cutaway_selection();
 } else {
     render_3d_layer_selection();
 }
@@ -114,6 +121,40 @@ module render_2d_layer_selection() {
     } else {
         base_plate_2d_profile();
         translate([0, base_height]) upper_dampener_2d_profile();
+    }
+}
+
+
+module cutaway_half() {
+    // Remove the Y < 0 half of the rotational model.
+    translate([-100, -100, -50])
+        cube([200, 100, 100]);
+}
+
+module render_3d_cutaway_selection() {
+    gap_inset = cutaway_material_gap / 2;
+
+    // Keep the two materials as separate solids in this display mode.  If we
+    // unioned them first, the deliberately introduced seam could disappear.
+    if (part_selection == "base" || part_selection == "both") {
+        color("DarkOrange")
+        difference() {
+            rotate_extrude()
+                offset(delta = -gap_inset)
+                    base_plate_2d_profile();
+            cutaway_half();
+        }
+    }
+
+    if (part_selection == "upper" || part_selection == "both") {
+        color("DimGray")
+        difference() {
+            translate([0, 0, base_height])
+                rotate_extrude()
+                    offset(delta = -gap_inset)
+                        upper_dampener_2d_profile();
+            cutaway_half();
+        }
     }
 }
 

@@ -4,7 +4,7 @@
 
 /* [Matrix View Controls] */
 // Select the visual layout
-model_view = "3D Cross Section"; // [3D Assembled, 3D Cross Section, 2D Sketch]
+model_view = "3D Cutaway"; // [3D Assembled, 3D Cutaway, 2D Sketch]
 // Choose which components are visible
 part_selection = "both"; // [base: PETG only, upper: TPU only, both: Full Assembly]
 
