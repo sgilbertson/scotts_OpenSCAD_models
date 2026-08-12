@@ -13,12 +13,12 @@ This design is optimized for dual-toolhead setups (like the Bambu Lab X2D or ind
 ## Step 1: Exporting from OpenSCAD
 
    1. Inside the OpenSCAD Customizer panel, change your dimensions to match your target hardware.
-   2. Change part_selection to "base". Hit F6 (Render), then Export as 3MF (name it base.3mf).
-   3. Change part_selection to "upper". Hit F6 (Render), then Export as 3MF (name it upper.3mf).
+   2. Change part_selection to "base". Hit F6 (Render), then Export as STL (name it base.stl).
+   3. Change part_selection to "upper". Hit F6 (Render), then Export as STL (name it upper.stl).
 
 ## Step 2: Slicing Setup in Bambu Studio
 
-   1. Drag both base.3mf and upper.3mf files onto your print bed simultaneously.
+   1. Drag both base.stl and upper.stl files onto your print bed simultaneously.
    2. Bambu Studio will prompt you: "Multi-part object detected. Do you want to load these files as a single object with multiple parts?" Click YES.
    3. Go to the left-hand Objects panel tab:
    * Select your base sub-component and assign it to your PETG toolhead/extruder slot.
