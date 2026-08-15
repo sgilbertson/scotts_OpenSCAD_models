@@ -1,6 +1,13 @@
 // Parametric Equipment Foot Generator v41 - TPU-Wrapped Interlock (Version 2.4)
 // Designed for Dual-Material Co-Printing (e.g., TPU + PETG)
-// Fully protected against breaking via Customizer assertions
+// Attempts to be fully protected against breaking via Customizer assertions
+//
+// How it works:
+// The PETG base is printed first, and the TPU upper is printed on top of it.
+// The interlock mechanism is designed to prevent the TPU upper from falling off the PETG base.
+// The TPU upper wraps around the outside of the PETG base, and the PETG base has a dovetail-shaped cavity that the TPU upper fits into.
+// Each section is designed using a 2D sketch, which is then rotated around the Z-axis to create a 3D model.  The two sections are then
+// combined into a single assembly for visualization, but they are exported as separate STL files for printing.
 
 /* [Matrix View Controls] */
 // Select the visual layout
@@ -11,14 +18,17 @@ part_selection = "both"; // [base: PETG only, upper: TPU only, both: Full Assemb
 /* [Fastener Logic] */
 // Choose the fastener pocket type (Countersink or Washer)
 fastener_type = "countersink"; // [countersink: Flat-head screw, washer: Pan-head/Round-head + washer]
-base_hole_dia = 4.5;    // Through-hole for mounting bolt shaft
 
-// Countersink dimensions (Used if fastener_type == "countersink")
-base_countersink_dia = 9;
-countersink_angle = 90; // Angle of flat head screw (usually 82 or 90 degrees)
+// Through-hole slightly larger than screw shaft (about 4.5mm for #8 screw)
+base_hole_dia = 4.5;
 
-// Washer dimensions (Used if fastener_type == "washer")
-washer_dia = 12;        
+// Countersink dimensions when fastener_type == "countersink" (angle typically 82 or 90 degrees)
+base_countersink_dia = 9.0;
+countersink_angle = 82;
+
+// Washer diameter (Used if fastener_type == "washer")
+washer_dia = 12;
+// Recess for washer in base plate (allowed to be negative!)      
 washer_depth = 2.5;     
 
 /* [Global Dimensions] */
@@ -113,6 +123,7 @@ if (model_view == "2D Sketch") {
     render_3d_layer_selection();
 }
 
+// Render the 2D profile of the selected part(s) for previewing in 2D Sketch mode.
 module render_2d_layer_selection() {
     if (part_selection == "base") {
         base_plate_2d_profile();
@@ -131,6 +142,7 @@ module cutaway_half() {
         cube([200, 100, 100]);
 }
 
+// Render the 3D profile of the selected part(s) for previewing in 3D Assembled or 3D Cutaway mode.
 module render_3d_cutaway_selection() {
     gap_inset = cutaway_material_gap / 2;
 
@@ -158,6 +170,7 @@ module render_3d_cutaway_selection() {
     }
 }
 
+// Render the 3D profile of the selected part(s) for previewing in 3D Assembled mode.
 module render_3d_layer_selection() {
     union() {
         if (part_selection == "base" || part_selection == "both") {
@@ -174,8 +187,10 @@ module render_3d_layer_selection() {
 
 // --- Component 2D Profile Geometries ---
 
+// Base plate, which is printed first, normally in a hard material like PETG.
+// This is the part that contacts the equipment and provides a rigid base for the TPU upper.
 module base_plate_2d_profile() {
-    // Version 2 reverses the interlock from version 1:
+    // The interlock between halves works as follows:
     // the PETG base is shorter at its outside edge, while the TPU skirt
     // comes down around it.  The PETG still rises to full base_height
     // around the fastener pocket so the mounting geometry is unchanged.
@@ -204,6 +219,8 @@ module base_plate_2d_profile() {
     ]);
 }
 
+// Upper dampener, which is printed second, normally in a flexible material like TPU.
+// This is the part that contacts the surface on which the equipment sits, providing vibration damping.
 module upper_dampener_2d_profile() {
     half_angle = (90 + cone_angle) / 2;
     dist_to_tangent = outer_fillet_radius / tan(half_angle);
