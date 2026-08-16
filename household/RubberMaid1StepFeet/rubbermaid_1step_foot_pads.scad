@@ -17,13 +17,19 @@ pad_height = 3.0;
 // Tread depth in mm (cuts into the pad height to provide traction)
 tread_depth = 1.0;
 
+// Tread width in mm (width of the tread grooves, with flat areas between)
+tread_width = 1.5;
+
 // Tread spacing in mm (distance between tread grooves, in each direction))
-tread_spacing = 1.0;
+tread_spacing = 2.0;
 
 // Height of the base plate in mm
 base_height = 0.5;
 
 /* [Hidden] */
+
+// Boost resolution
+$fn = 100;
 
 // Mathematical offset to eliminate coincident face errors and preview calculation bugs
 eps = 0.01; 
@@ -45,12 +51,12 @@ module tread_grooves() {
     for (x = [-pad_diameter/2 : tread_spacing : pad_diameter/2]) {
         // Horizontal grooves (extending along Y axis)
         translate([x, 0, pad_height/2])
-        triangular_groove(pad_diameter * 1.5, tread_depth, tread_depth);
+        triangular_groove(pad_diameter * 1.5, tread_depth, tread_width);
         
         // Vertical grooves (extending along X axis)
         translate([0, x, pad_height/2])
         rotate([0, 0, 90])
-        triangular_groove(pad_diameter * 1.5, tread_depth, tread_depth);
+        triangular_groove(pad_diameter * 1.5, tread_depth, tread_width);
     }
 }
 
