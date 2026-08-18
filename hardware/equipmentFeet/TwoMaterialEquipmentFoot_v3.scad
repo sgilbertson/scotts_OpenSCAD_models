@@ -43,6 +43,8 @@ interlock_angle = 20;   // Interlock face angle (degrees)
 lip_tolerance = 0.0;    // Clearance gap (Keep 0 for dual-nozzle co-printing)
 // Total number of concentric dovetails, including the original outer dovetail
 dovetail_count = 1;     // [1:1:4]
+// Minimum TPU thickness between an added dovetail and the sloped outer wall
+minimum_tpu_outer_wall = 1.2;
 
 /* [Fillets (TPU Tip)] */
 // Supports fine decimal increments. Set to 0 for perfectly sharp corners.
@@ -95,31 +97,62 @@ r_lock_neck = r_step_edge - interlock_width;
 // matching the intended undercut direction.  (Version 2 originally had this sign reversed.)
 r_lock_floor = r_lock_neck - (lip_height * tan(interlock_angle));
 
-// Extra dovetails are distributed evenly across the flat interface. Their
-// necks narrow automatically when necessary so neighboring dovetails cannot
-// overlap, while retaining the selected depth and flank angle.
-dovetail_flare = lip_height * tan(interlock_angle);
-dovetail_spacing = (r_lock_neck - r_clear) / dovetail_count;
-inner_dovetail_neck_width = min(interlock_width,
-                                dovetail_spacing - (2 * dovetail_flare) - eps);
-inner_dovetail_floor_half_width = (inner_dovetail_neck_width / 2) + dovetail_flare;
-minimum_base_bridge_width = 0.5;
-base_bridge_width = (dovetail_count > 2)
-    ? dovetail_spacing - (2 * inner_dovetail_floor_half_width)
-    : dovetail_spacing - dovetail_flare - inner_dovetail_floor_half_width;
-
-assert(dovetail_count >= 1 && dovetail_count == floor(dovetail_count),
-       "ERROR: Dovetail count must be a positive whole number.");
-assert(dovetail_count == 1 || inner_dovetail_neck_width > eps,
-       "ERROR: Too many dovetails for the available radius, lip height, and interlock angle.");
-assert(dovetail_count == 1 || base_bridge_width >= minimum_base_bridge_width,
-       str("ERROR: Dovetails leave only ", base_bridge_width,
-           "mm of hard base between them; at least ", minimum_base_bridge_width,
-           "mm is required. Reduce the dovetail count, lip height, or interlock angle."));
-
 // The maximum TPU radius is locked to the PETG/base radius.  This makes the
 // TPU skirt meet the PETG exactly at the outside edge rather than overhanging it.
 r_skirt_outer = r_base;
+
+dovetail_flare = lip_height * tan(interlock_angle);
+
+// With multiple dovetails, move the original outer interlock inward far
+// enough to preserve the requested TPU wall at both ends of its flank.
+// A single dovetail deliberately retains the exact version 2 geometry.
+required_radial_outer_wall = minimum_tpu_outer_wall / cos(cone_angle);
+outer_lock_inward_shift = (dovetail_count > 1) ? max([
+    0,
+    r_lock_neck - (r_cone_bot - required_radial_outer_wall),
+    r_lock_floor - (r_skirt_outer - required_radial_outer_wall)
+]) : 0;
+r_lock_neck_position = r_lock_neck - outer_lock_inward_shift;
+r_lock_floor_position = r_lock_floor - outer_lock_inward_shift;
+outer_tpu_wall_thickness = min(
+    (r_cone_bot - r_lock_neck_position) * cos(cone_angle),
+    (r_skirt_outer - r_lock_floor_position) * cos(cone_angle)
+);
+
+// Redistribute the added dovetails evenly inside the relocated outer lock.
+// Their necks narrow automatically when necessary so neighboring dovetails
+// cannot overlap, while retaining the selected depth and flank angle.
+dovetail_spacing = (r_lock_neck_position - r_clear) / dovetail_count;
+inner_dovetail_neck_width = min(interlock_width,
+                                dovetail_spacing - (2 * dovetail_flare) - eps);
+inner_dovetail_floor_half_width = (inner_dovetail_neck_width / 2) + dovetail_flare;
+innermost_dovetail_center = r_clear + dovetail_spacing;
+outermost_dovetail_center = r_clear + ((dovetail_count - 1) * dovetail_spacing);
+
+minimum_base_bridge_width = 0.5;
+inner_base_bridge_width = innermost_dovetail_center
+    - inner_dovetail_floor_half_width - r_clear;
+outer_base_bridge_width = r_lock_floor_position - outermost_dovetail_center
+    - inner_dovetail_floor_half_width;
+adjacent_base_bridge_width = dovetail_spacing
+    - (2 * inner_dovetail_floor_half_width);
+base_bridge_width = (dovetail_count > 2)
+    ? min([inner_base_bridge_width, outer_base_bridge_width, adjacent_base_bridge_width])
+    : min(inner_base_bridge_width, outer_base_bridge_width);
+
+assert(dovetail_count >= 1 && dovetail_count == floor(dovetail_count),
+       "ERROR: Dovetail count must be a positive whole number.");
+assert(minimum_tpu_outer_wall >= 0,
+       "ERROR: Minimum TPU outer wall must not be negative.");
+assert(dovetail_count == 1 || outer_tpu_wall_thickness + eps >= minimum_tpu_outer_wall,
+       "ERROR: Unable to preserve the requested minimum TPU outer wall.");
+assert(dovetail_count == 1 || inner_dovetail_neck_width > eps,
+       "ERROR: Too many dovetails for the available radius, lip height, and interlock angle.");
+assert(dovetail_count == 1 || base_bridge_width >= minimum_base_bridge_width,
+       str("ERROR: After preserving the ", minimum_tpu_outer_wall,
+           "mm TPU outer wall, the dovetails leave only ", base_bridge_width,
+           "mm of hard base; at least ", minimum_base_bridge_width,
+           "mm is required. Reduce the dovetail count, width, lip height, or interlock angle."));
 
 // --- MakerWorld Input Validation Asserts (Safety Limits) ---
 max_inner_radius = r_cone_top - r_clear;
@@ -228,8 +261,8 @@ module base_plate_2d_profile() {
         [r_base, base_height - lip_height + lip_tolerance],
 
         // Sloped tongue under the TPU wrap.
-        [r_lock_floor + lip_tolerance, base_height - lip_height + lip_tolerance],
-        [r_lock_neck + lip_tolerance, base_height],
+        [r_lock_floor_position + lip_tolerance, base_height - lip_height + lip_tolerance],
+        [r_lock_neck_position + lip_tolerance, base_height],
 
         // Additional TPU-filled annular dovetails, ordered outside to inside.
         if (dovetail_count > 1)
@@ -282,10 +315,10 @@ module upper_dampener_2d_profile() {
                             [center + neck_half, 0]
                         ],
 
-                [r_lock_neck - overlap_offset, 0],
+                [r_lock_neck_position - overlap_offset, 0],
 
                 // TPU wraps DOWN around the outside of the PETG tongue.
-                [r_lock_floor - overlap_offset, -lip_height - overlap_offset],
+                [r_lock_floor_position - overlap_offset, -lip_height - overlap_offset],
 
                 // Keep the outside surface on the SAME taper all the way down
                 // to the bottom of the TPU skirt; no cylindrical section here.
