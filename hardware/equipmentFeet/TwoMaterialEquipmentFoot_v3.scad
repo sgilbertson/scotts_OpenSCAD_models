@@ -8,10 +8,20 @@
 // Each section is designed using a 2D sketch, which is then rotated around the Z-axis to create a 3D model.  The two sections are then
 // combined into a single assembly for visualization, but they are exported as separate STL files for printing.
 
+/* [Information For Users] */
+// This model uses two-material printing to create a round foot that can be screwed to the bottom of furniture or equipment. It can be printed with a hard material like PLA or PETG for the base and a soft material like TPU for the upper, or you can print both parts in the same material.
+Concept = true;
+// The two parts are mechanically interlocked using dovetails, so the upper can not fall off the base. You can configure the number and dimensions of the dovetails.
+Mechanical_interlock = true;
+// A hard base is useful for larger diameter feet, where a soft TPU base alone could bend or tear under load. It also may eliminate the need for a washer in some cases.
+Why_use_two_materials = true;
+// You can also print both parts in TPU, if you don't need the extra rigidity of a hard base.
+Can_print_both_parts_in_TPU = true;
+
 /* [Matrix View Controls] */
 // Select the visual layout
 model_view = "3D Cutaway"; // [3D Assembled, 3D Cutaway, 2D Sketch]
-// Choose which components are visible
+// Choose which components are visible. For printing you can export "PETG only" and "TPU only" as separate STL files, then combine them as a part in Bambu Studio.
 part_selection = "both"; // [base: PETG only, upper: TPU only, both: Full Assembly]
 
 /* [Fastener Logic] */
@@ -22,7 +32,7 @@ fastener_type = "countersink"; // [countersink: Flat-head screw, washer: Pan-hea
 base_hole_dia = 4.5;
 
 // Countersink dimensions when fastener_type == "countersink" (angle typically 82 or 90 degrees)
-base_countersink_dia = 9.0;
+base_countersink_dia = 9.0; // [1:0.1:30]
 countersink_angle = 82;
 
 // Washer or screw head diameter (Used if fastener_type == "washer")
@@ -31,16 +41,24 @@ washer_dia = 12;
 washer_depth = 2.5;     
 
 /* [Global Dimensions] */
-base_diameter = 40;     // The master outer diameter of the equipment foot
-base_height = 9;        
-upper_top_diameter = 25; // The diameter of the flat top surface tip of the TPU part
-upper_height = 15;      // Height of the flexible TPU upper body
+// The master outer diameter of the equipment foot
+base_diameter = 40;
+// The height of the base (typically PETG), which is printed first
+base_height = 9;
+// The diameter of the flat top surface tip of the TPU part
+upper_top_diameter = 25;
+// Height of the flexible TPU upper body
+upper_height = 15;
 
 /* [Sloped Mechanical Interlock] */
-lip_height = 3.5;       // How far the TPU skirt extends down around the PETG base
-interlock_width = 3.0;  // Radial width of the sloped PETG/TPU interlock
-interlock_angle = 20;   // Interlock face angle (degrees)
-lip_tolerance = 0.0;    // Clearance gap (Keep 0 for dual-nozzle co-printing)
+// How far the TPU skirt extends down around the PETG base
+lip_height = 3.5;
+// Radial width of the sloped PETG/TPU interlock
+interlock_width = 3.0;  // [0.1:0.1:20]
+// Interlock face angle (degrees)
+interlock_angle = 20;
+// Clearance gap (Keep 0 for dual-nozzle co-printing)
+lip_tolerance = 0.0;    // [-2:0.1:2]
 // Total number of concentric dovetails, including the original outer dovetail
 dovetail_count = 1;     // [1:1:4]
 // Minimum TPU thickness between an added dovetail and the sloped outer wall
