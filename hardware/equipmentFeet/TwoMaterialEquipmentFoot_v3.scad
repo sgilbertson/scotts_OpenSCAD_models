@@ -211,6 +211,8 @@ module render_2d_layer_selection() {
         complete_2d_profile()
             translate([0, base_height]) upper_dampener_2d_profile();
     }
+
+    settings_table_2d();
 }
 
 // The construction profiles describe one radius. Mirror them across the
@@ -218,6 +220,84 @@ module render_2d_layer_selection() {
 module complete_2d_profile() {
     children();
     mirror([1, 0, 0]) children();
+}
+
+// Draw a compact record of all applicable user-configurable geometry values.
+// Matrix controls and the informational placeholder are intentionally omitted.
+module settings_table_2d() {
+    settings = concat(
+        [
+            ["Fastener type", fastener_type],
+            ["Base hole diameter", str(base_hole_dia, " mm")]
+        ],
+        (fastener_type == "countersink") ?
+            [
+                ["Countersink diameter", str(base_countersink_dia, " mm")],
+                ["Countersink angle", str(countersink_angle, " deg")]
+            ] :
+            [
+                ["Washer/head diameter", str(washer_dia, " mm")],
+                ["Washer/head depth", str(washer_depth, " mm")]
+            ],
+        [
+            ["Base diameter", str(base_diameter, " mm")],
+            ["Base height", str(base_height, " mm")],
+            ["Upper top diameter", str(upper_top_diameter, " mm")],
+            ["Upper height", str(upper_height, " mm")],
+            ["Lip height", str(lip_height, " mm")],
+            ["Interlock width", str(interlock_width, " mm")],
+            ["Interlock angle", str(interlock_angle, " deg")],
+            ["Lip tolerance", str(lip_tolerance, " mm")],
+            ["Dovetail count", dovetail_count],
+            ["Minimum TPU outer wall", str(minimum_tpu_outer_wall, " mm")],
+            ["Outer fillet radius", str(outer_fillet_radius, " mm")],
+            ["Inner fillet radius", str(inner_fillet_radius, " mm")]
+        ]
+    );
+
+    columns = 2;
+    rows = ceil(len(settings) / columns);
+    table_width = max(base_diameter, 70);
+    column_width = table_width / columns;
+    row_height = 3.5;
+    header_height = 4;
+    table_height = header_height + (rows * row_height);
+    table_top = -4;
+    table_bottom = table_top - table_height;
+    line_width = 0.08;
+
+    color("Navy") {
+        // Outer border and the grid separating settings.
+        translate([-table_width / 2, table_bottom])
+            difference() {
+                square([table_width, table_height]);
+                translate([line_width, line_width])
+                    square([table_width - (2 * line_width),
+                            table_height - (2 * line_width)]);
+            }
+
+        translate([-line_width / 2, table_bottom])
+            square([line_width, table_height - header_height]);
+
+        for (row = [1 : rows])
+            translate([-table_width / 2,
+                       table_bottom + (row * row_height) - (line_width / 2)])
+                square([table_width, line_width]);
+
+        translate([0, table_top - (header_height / 2)])
+            text("Configured Settings", size = 1.8,
+                 halign = "center", valign = "center");
+
+        for (row = [0 : rows - 1], column = [0 : columns - 1])
+            let(index = (row * columns) + column)
+            if (index < len(settings))
+                translate([
+                    (-table_width / 2) + (column * column_width) + 1,
+                    table_top - header_height - ((row + 0.5) * row_height)
+                ])
+                    text(str(settings[index][0], ": ", settings[index][1]),
+                         size = 1.15, valign = "center");
+    }
 }
 
 
