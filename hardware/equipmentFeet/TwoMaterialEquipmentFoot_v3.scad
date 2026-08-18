@@ -1,7 +1,6 @@
 // Parametric Equipment Foot Generator v41 - TPU-Wrapped Interlock (Version 2.4)
 // Designed for Dual-Material Co-Printing (e.g., TPU + PETG)
 // Attempts to be fully protected against breaking via Customizer assertions
-// TODO: For this version 3, allow selection of multiple dovetails. If one dovetail is selected, it works like TwoMaterialEquipmentFoot_v2.scad, but if more than one is selected additional dovetails are placed between the center hole and the outer edge.
 // How it works:
 // The PETG base is printed first, and the TPU upper is printed on top of it.
 // The interlock mechanism is designed to prevent the TPU upper from falling off the PETG base.
@@ -42,6 +41,8 @@ lip_height = 3.5;       // How far the TPU skirt extends down around the PETG ba
 interlock_width = 3.0;  // Radial width of the sloped PETG/TPU interlock
 interlock_angle = 20;   // Interlock face angle (degrees)
 lip_tolerance = 0.0;    // Clearance gap (Keep 0 for dual-nozzle co-printing)
+// Total number of concentric dovetails, including the original outer dovetail
+dovetail_count = 1;     // [1:1:4]
 
 /* [Fillets (TPU Tip)] */
 // Supports fine decimal increments. Set to 0 for perfectly sharp corners.
@@ -93,6 +94,28 @@ r_lock_neck = r_step_edge - interlock_width;
 // Positive interlock_angle now makes the PETG tongue flare inward toward its lower edge,
 // matching the intended undercut direction.  (Version 2 originally had this sign reversed.)
 r_lock_floor = r_lock_neck - (lip_height * tan(interlock_angle));
+
+// Extra dovetails are distributed evenly across the flat interface. Their
+// necks narrow automatically when necessary so neighboring dovetails cannot
+// overlap, while retaining the selected depth and flank angle.
+dovetail_flare = lip_height * tan(interlock_angle);
+dovetail_spacing = (r_lock_neck - r_clear) / dovetail_count;
+inner_dovetail_neck_width = min(interlock_width,
+                                dovetail_spacing - (2 * dovetail_flare) - eps);
+inner_dovetail_floor_half_width = (inner_dovetail_neck_width / 2) + dovetail_flare;
+minimum_base_bridge_width = 0.5;
+base_bridge_width = (dovetail_count > 2)
+    ? dovetail_spacing - (2 * inner_dovetail_floor_half_width)
+    : dovetail_spacing - dovetail_flare - inner_dovetail_floor_half_width;
+
+assert(dovetail_count >= 1 && dovetail_count == floor(dovetail_count),
+       "ERROR: Dovetail count must be a positive whole number.");
+assert(dovetail_count == 1 || inner_dovetail_neck_width > eps,
+       "ERROR: Too many dovetails for the available radius, lip height, and interlock angle.");
+assert(dovetail_count == 1 || base_bridge_width >= minimum_base_bridge_width,
+       str("ERROR: Dovetails leave only ", base_bridge_width,
+           "mm of hard base between them; at least ", minimum_base_bridge_width,
+           "mm is required. Reduce the dovetail count, lip height, or interlock angle."));
 
 // The maximum TPU radius is locked to the PETG/base radius.  This makes the
 // TPU skirt meet the PETG exactly at the outside edge rather than overhanging it.
@@ -208,6 +231,18 @@ module base_plate_2d_profile() {
         [r_lock_floor + lip_tolerance, base_height - lip_height + lip_tolerance],
         [r_lock_neck + lip_tolerance, base_height],
 
+        // Additional TPU-filled annular dovetails, ordered outside to inside.
+        if (dovetail_count > 1)
+            for (i = [dovetail_count - 1 : -1 : 1]) each
+                let(center = r_clear + (i * dovetail_spacing),
+                    neck_half = inner_dovetail_neck_width / 2)
+                [
+                    [center + neck_half, base_height],
+                    [center + inner_dovetail_floor_half_width, base_height - lip_height],
+                    [center - inner_dovetail_floor_half_width, base_height - lip_height],
+                    [center - neck_half, base_height]
+                ],
+
         // Full-height PETG remains around the screw pocket.
         [r_clear, base_height],
 
@@ -234,6 +269,19 @@ module upper_dampener_2d_profile() {
             polygon([
                 // Flat TPU/PETG interface at full base height.
                 [r_clear, 0],
+
+                // Additional downward-flaring annular dovetails, inside to outside.
+                if (dovetail_count > 1)
+                    for (i = [1 : dovetail_count - 1]) each
+                        let(center = r_clear + (i * dovetail_spacing),
+                            neck_half = inner_dovetail_neck_width / 2)
+                        [
+                            [center - neck_half, 0],
+                            [center - inner_dovetail_floor_half_width, -lip_height],
+                            [center + inner_dovetail_floor_half_width, -lip_height],
+                            [center + neck_half, 0]
+                        ],
+
                 [r_lock_neck - overlap_offset, 0],
 
                 // TPU wraps DOWN around the outside of the PETG tongue.

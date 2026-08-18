@@ -7,6 +7,11 @@
 // Alternatively you can configure Bambu Studio to print a PLA raft and a TPU part, whereupon the raft
 // can be easily removed and the TPU pad can be glued to the bottom of the step stool.
 
+// For fastest and cleanest printing, use concentric treads and a low tread count.
+// For maximum traction, use crosshatch treads and a higher tread count.
+// With concentric treads, you can configure the slicer for 100% concentric infill.
+// With crosshatch treads, you can configure the slicer for 100% rectilinear infill.
+
 /* [Matrix View Controls] */
 // Choose which components are visible
 part_selection = "pad"; // [base: base only, pad: TPU pad only, both: Full Assembly]
@@ -20,7 +25,7 @@ tread_pattern = "concentric"; // [crosshatch: Cross-hatch pattern, concentric: C
 pad_diameter = 20;
 
 // Height of the foot pad in mm
-pad_height = 3.0;
+pad_height = 2.0;
 
 // Tread depth in mm (cuts into the pad height to provide traction)
 tread_depth = 1.0;
@@ -29,7 +34,7 @@ tread_depth = 1.0;
 tread_width = 1.5;
 
 // Tread count
-tread_count = 6;
+tread_count = 5;
 
 // Height of the base plate in mm
 base_height = 0.5;
@@ -113,6 +118,7 @@ module concentric_tread_grooves() {
     }
 }
 
+// Render the 3D model based on the selected part(s) and tread pattern
 module render_3d_layer_selection() {
     union() {
         // Base layer
