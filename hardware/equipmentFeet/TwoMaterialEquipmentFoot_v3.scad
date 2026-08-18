@@ -64,6 +64,9 @@ dovetail_count = 1;     // [1:1:4]
 // Minimum TPU thickness between an added dovetail and the sloped outer wall
 minimum_tpu_outer_wall = 1.2;
 
+// Look straight down at the XY plane whenever the 2D profile is selected.
+$vpr = (model_view == "2D Sketch") ? [0, 0, 0] : $vpr;
+
 /* [Fillets (TPU Tip)] */
 // Supports fine decimal increments. Set to 0 for perfectly sharp corners.
 outer_fillet_radius = 2.0; // [0:0.1:10]
@@ -200,13 +203,21 @@ if (model_view == "2D Sketch") {
 // Render the 2D profile of the selected part(s) for previewing in 2D Sketch mode.
 module render_2d_layer_selection() {
     if (part_selection == "base") {
-        base_plate_2d_profile();
+        complete_2d_profile() base_plate_2d_profile();
     } else if (part_selection == "upper") {
-        upper_dampener_2d_profile();
+        complete_2d_profile() upper_dampener_2d_profile();
     } else {
-        base_plate_2d_profile();
-        translate([0, base_height]) upper_dampener_2d_profile();
+        complete_2d_profile() base_plate_2d_profile();
+        complete_2d_profile()
+            translate([0, base_height]) upper_dampener_2d_profile();
     }
+}
+
+// The construction profiles describe one radius. Mirror them across the
+// centerline in sketch mode to expose the complete fastener-hole section.
+module complete_2d_profile() {
+    children();
+    mirror([1, 0, 0]) children();
 }
 
 
