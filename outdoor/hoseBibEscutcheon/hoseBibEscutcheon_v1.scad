@@ -212,8 +212,7 @@ module escutcheon_profile2d() {
     // Trace one closed radial section: pipe wall, sleeve, plate, and back rim.
     polygon(concat(
         [[pipe_radius, 0],
-         [pipe_radius, body_thickness + sleeve_height],
-         [sleeve_top_radius, body_thickness + sleeve_height]],
+         [pipe_radius, body_thickness + sleeve_height]],
         [for (i = [len(sleeve_profile) - 1 : -1 : 0]) sleeve_profile[i]],
         plate_edge_profile(),
         [[outer_radius, -back_rim_depth],
@@ -222,13 +221,17 @@ module escutcheon_profile2d() {
     ));
 }
 
-module unsplit_escutcheon() {
+module escutcheon_solid() {
     union() {
         rotate_extrude(convexity = 6) escutcheon_profile2d();
 
         // Inner halves rise as wedges; outer halves stay broad and flat.
         petals();
     }
+}
+
+module unsplit_escutcheon() {
+    escutcheon_solid();
 }
 
 module screw_hole(angle) {
@@ -248,7 +251,7 @@ module screw_hole(angle) {
     }
 }
 
-module upper_part() {
+module upper_part_geometry() {
     difference() {
         intersection() {
             unsplit_escutcheon();
@@ -264,7 +267,15 @@ module upper_part() {
     }
 }
 
-module lower_part() {
+module upper_part() {
+    // Give OpenCSG a completed mesh in preview; leave F6 geometry unchanged.
+    if ($preview)
+        render(convexity = 20) upper_part_geometry();
+    else
+        upper_part_geometry();
+}
+
+module lower_part_geometry() {
     difference() {
         union() {
             intersection() {
@@ -284,17 +295,33 @@ module lower_part() {
     }
 }
 
+module lower_part() {
+    // Give OpenCSG a completed mesh in preview; leave F6 geometry unchanged.
+    if ($preview)
+        render(convexity = 20) lower_part_geometry();
+    else
+        lower_part_geometry();
+}
+
 module assembled() {
     upper_part();
     lower_part();
 }
 
-module all_in_one() {
+module all_in_one_geometry() {
     difference() {
         unsplit_escutcheon();
         screw_hole(90);
         for (a = tab_angles) screw_hole(a);
     }
+}
+
+module all_in_one() {
+    // Give OpenCSG a completed mesh in preview; leave F6 geometry unchanged.
+    if ($preview)
+        render(convexity = 20) all_in_one_geometry();
+    else
+        all_in_one_geometry();
 }
 
 if (model_view == "Upper part")
