@@ -15,7 +15,8 @@ body_thickness      = 5;
 petal_count         = 12;       // Use a multiple of four to center a bottom petal.
 petal_width         = 12;
 petal_outer_radius  = 51;
-petal_height        = 1.8;
+petal_outer_thickness = 1.8;
+petal_corner_radius = 1.5;
 
 /* [Pipe sleeve] */
 sleeve_height         = 18;
@@ -39,6 +40,7 @@ screw_head_style     = "Flat head"; // [Flat head, Round head]
 tab_radius          = 8;
 tab_thickness       = 2;
 fit_clearance       = 0.25;
+slot_side_clearance = 0.25;
 
 /* [Resolution] */
 $fn                 = 72;
@@ -49,7 +51,7 @@ front_radius = front_diameter / 2;
 pipe_radius  = pipe_diameter / 2 + pipe_clearance;
 sleeve_top_radius = pipe_radius + sleeve_wall_thickness;
 sleeve_base_radius = sleeve_top_radius + sleeve_flare;
-total_height = body_thickness + max(petal_height, sleeve_height);
+total_height = body_thickness + max(petal_outer_thickness, sleeve_height);
 petal_pitch = 360 / petal_count;
 petal_half_angle = min(petal_pitch / 2 - 0.2,
                        asin(min(0.999, petal_width / (2 * petal_outer_radius))));
@@ -76,7 +78,7 @@ module upper_mask2d(extra = 0) {
     difference() {
         sector2d(-90 + lower_half_angle, 270 - lower_half_angle,
                  outer_radius + extra);
-        pipe_channel2d(extra);
+        pipe_channel2d(extra, slot_side_clearance);
     }
 }
 
@@ -88,17 +90,17 @@ module lower_mask2d(extra = 0) {
     }
 }
 
-module pipe_channel2d(extra = 0) {
+module pipe_channel2d(extra = 0, side_clearance = 0) {
     // Parallel walls guarantee an opening as wide as the center hole.
-    translate([-pipe_radius, -outer_radius - extra])
-        square([2 * pipe_radius, outer_radius + extra]);
+    translate([-pipe_radius - side_clearance, -outer_radius - extra])
+        square([2 * (pipe_radius + side_clearance), outer_radius + extra]);
 }
 
 module tab_shape2d(clearance = 0) {
     for (a = tab_angles)
         hull() {
             rotate(a)
-                translate([mount_radius - tab_radius / 2, 0])
+                translate([mount_radius, 0])
                     circle(r = tab_radius + clearance);
             rotate(-90)
                 translate([mount_radius - tab_radius / 2, 0])
@@ -108,9 +110,39 @@ module tab_shape2d(clearance = 0) {
 
 module petal2d() {
     // Radial sides provide exact petal edges for concealing the part seam.
-    difference() {
-        sector2d(-petal_half_angle, petal_half_angle, petal_outer_radius);
-        circle(r = sleeve_base_radius - 0.05);
+    offset(r = petal_corner_radius)
+        offset(delta = -petal_corner_radius)
+            difference() {
+                sector2d(-petal_half_angle, petal_half_angle,
+                         petal_outer_radius);
+                circle(r = sleeve_base_radius - 0.05);
+            }
+}
+
+module petal_height_envelope() {
+    ramp_end_radius = (sleeve_base_radius + petal_outer_radius) / 2;
+    rotate_extrude(convexity = 2)
+        polygon([
+            [sleeve_base_radius - 0.1, body_thickness - 0.01],
+            [sleeve_base_radius - 0.1, body_thickness],
+            [ramp_end_radius, body_thickness + petal_outer_thickness],
+            [front_radius - 0.1, body_thickness + petal_outer_thickness],
+            [front_radius - 0.1, body_thickness - 0.01]
+        ]);
+}
+
+module petals() {
+    intersection() {
+        petal_height_envelope();
+        translate([0, 0, body_thickness - 0.01])
+            linear_extrude(height = petal_outer_thickness + 0.02)
+                intersection() {
+                    union()
+                        for (a = [0 : 360 / petal_count : 359])
+                            rotate(a) petal2d();
+                    // Wide petals can never extend beyond the flat front face.
+                    circle(r = front_radius - 0.1);
+                }
     }
 }
 
@@ -138,16 +170,8 @@ module unsplit_escutcheon() {
 
             sleeve();
 
-            // Raised petals; the visible base between them forms the recesses.
-            for (a = [0 : 360 / petal_count : 359])
-                rotate([0, 0, a])
-                    translate([0, 0, body_thickness - 0.01])
-                        linear_extrude(height = petal_height)
-                            intersection() {
-                                petal2d();
-                                // Keep even very wide petals on the flat front face.
-                                circle(r = front_radius - 0.1);
-                            }
+            // Inner halves rise as wedges; outer halves stay broad and flat.
+            petals();
 
             // The projecting back rim retains a neoprene foam washer.
             translate([0, 0, -back_rim_depth])
@@ -169,12 +193,12 @@ module screw_hole(angle) {
                      d = screw_shank_diameter);
         if (screw_head_style == "Flat head")
             translate([0, 0, body_thickness - screw_head_height])
-                cylinder(h = screw_head_height + petal_height + 1,
+                cylinder(h = screw_head_height + petal_outer_thickness + 1,
                          d1 = screw_shank_diameter,
                          d2 = screw_head_diameter);
         else if (screw_head_style == "Round head")
             translate([0, 0, body_thickness - screw_head_height])
-                cylinder(h = screw_head_height + petal_height + 1,
+                cylinder(h = screw_head_height + petal_outer_thickness + 1,
                          d = screw_head_diameter);
     }
 }

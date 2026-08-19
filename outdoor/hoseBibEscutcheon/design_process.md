@@ -58,3 +58,15 @@ Here's what I mean by the side slopes of the petals:
 Result:
 
 ![Commit 3](images/commit3.png)
+
+Now I see these issues:
+
+- The tabs are not centered on the screw holes, so they won't be as strong as they could be.
+- The petals have become less decorative. Can we round off the end of each petal, concentric with the main circular plate, and further round off the outer corners, for example with a fillet?
+- Can we also restore the tapering of the petals, so that they are zero-height at the inner end and thicker near the tip? Maybe just wedge the inner half of the petal, so that the outer half is still flat and wide, but the inner half tapers down to zero height at the base of the petal.
+    - Let's make the outer-end thicknes a settable parameter.
+- A sliver of the petal edge appears on each side of the slot in the upper part. Maybe the slot needs to be made just a hair wider?
+
+I think this design is good enough that I'd be happy to use it now, although maybe some things could be rounded off or otherwise embelleshed, to be more decorative.
+
+![Commit 4](images/commit4.png)
