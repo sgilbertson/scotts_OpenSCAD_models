@@ -105,6 +105,79 @@ lower_half_angle = min(cut_at_outer_edge, cut_at_inner_edge);
 // Stores the angular locations of the two shared tab screw holes.
 tab_angles = [-135, -45];
 
+// Stop early with useful messages when a parameter set cannot form the model.
+assert(model_view == "Upper part" || model_view == "Lower part"
+       || model_view == "Assembled" || model_view == "All in one"
+       || model_view == "Side by side",
+       "model_view must be one of the listed selections.");
+assert(screw_head_style == "Flat head" || screw_head_style == "Round head",
+       "screw_head_style must be Flat head or Round head.");
+assert(part_gap >= 0, "part_gap must be zero or greater.");
+assert(pipe_diameter > 0, "pipe_diameter must be greater than zero.");
+assert(pipe_clearance >= 0, "pipe_clearance must be zero or greater.");
+assert(outer_diameter > 0, "outer_diameter must be greater than zero.");
+assert(body_thickness > 0, "body_thickness must be greater than zero.");
+assert(plate_edge_radius > 0 && plate_edge_radius <= body_thickness,
+       "plate_edge_radius must be greater than zero and no larger than body_thickness.");
+
+assert(petal_count >= 4 && petal_count % 4 == 0,
+       "petal_count must be a multiple of four and at least four.");
+assert(petal_width > 0 && petal_width < 2 * petal_outer_radius,
+       "petal_width must be greater than zero and smaller than the petal diameter.");
+assert(petal_outer_thickness > 0,
+       "petal_outer_thickness must be greater than zero.");
+assert(petal_corner_radius >= 0,
+       "petal_corner_radius must be zero or greater.");
+
+assert(sleeve_height > 0, "sleeve_height must be greater than zero.");
+assert(sleeve_wall_thickness > 0,
+       "sleeve_wall_thickness must be greater than zero.");
+assert(sleeve_flare >= 0, "sleeve_flare must be zero or greater.");
+assert(sleeve_profile_steps >= 3,
+       "sleeve_profile_steps must be at least three.");
+
+assert(back_rim_width > 0, "back_rim_width must be greater than zero.");
+assert(back_rim_depth > 0, "back_rim_depth must be greater than zero.");
+assert(foam_clearance >= 0, "foam_clearance must be zero or greater.");
+
+assert(mount_radius > 0, "mount_radius must be greater than zero.");
+assert(screw_shank_diameter > 0,
+       "screw_shank_diameter must be greater than zero.");
+assert(screw_head_diameter >= screw_shank_diameter,
+       "screw_head_diameter must not be smaller than screw_shank_diameter.");
+assert(screw_head_height > 0 && screw_head_height <= body_thickness,
+       "screw_head_height must be greater than zero and no larger than body_thickness.");
+
+assert(tab_radius > 0, "tab_radius must be greater than zero.");
+assert(tab_thickness > 0 && tab_thickness + fit_clearance < body_thickness,
+       "tab_thickness plus fit_clearance must be less than body_thickness.");
+assert(fit_clearance >= 0, "fit_clearance must be zero or greater.");
+assert(slot_side_clearance >= 0,
+       "slot_side_clearance must be zero or greater.");
+assert($fn >= 24, "$fn must be at least 24 for reliable curved geometry.");
+
+assert(sleeve_base_radius < front_radius,
+       "The sleeve is too wide for the flat face; reduce pipe size, sleeve wall, flare, or edge radius.");
+assert(petal_outer_radius > sleeve_base_radius,
+       "petal_outer_radius must be greater than sleeve_base_radius.");
+assert(petal_outer_radius <= front_radius - 0.1,
+       "petal_outer_radius reaches beyond the flat plate face and would clip the petal tips.");
+assert(petal_corner_radius < (petal_outer_radius - sleeve_base_radius) / 2
+       && petal_corner_radius < petal_width / 2,
+       "petal_corner_radius is too large for the selected petal length or width.");
+assert(outer_radius - back_rim_width - foam_clearance > pipe_radius,
+       "The back rim and foam clearance leave no usable recessed area.");
+assert(mount_radius - screw_head_diameter / 2 > sleeve_base_radius,
+       "The screw heads overlap the central sleeve; increase mount_radius or reduce the sleeve/head size.");
+assert(mount_radius + screw_head_diameter / 2 < front_radius,
+       "The screw heads extend into the rounded plate edge; reduce mount_radius or head diameter.");
+assert(tab_radius >= screw_head_diameter / 2 + fit_clearance,
+       "tab_radius is too small to reinforce the screw-head recess.");
+assert(mount_radius + tab_radius + fit_clearance < outer_radius,
+       "The tabs extend beyond the outside of the plate.");
+assert(tab_radius > mount_radius * sin(abs(45 - lower_half_angle)),
+       "The tab pads do not reach the lower part; increase tab_radius or adjust the petal geometry.");
+
 module sector2d(start_angle, end_angle, radius) {
     steps = ceil((end_angle - start_angle) / 6);
     polygon(concat([[0, 0]], [

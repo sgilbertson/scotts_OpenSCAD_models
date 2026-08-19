@@ -90,3 +90,7 @@ Then (pasting an image of the preview with default parameters, which is broken):
 > Here is what the preview looks like with the default parameters. Rendering works fine, but in the preview a lot of objects are missing. Can we make the preview work without disturbing the rendering? The default model view is "Assembled", but the problem happens in all view modes. In every case only the screw holes and, if present, the tabs, are shown in the preview.
 
 There were still some parts not previewing, so I prompted "More of it previews now, but not everything" with a pasted image, and that got me a preview that looks the same as the full render.
+
+Then:
+
+> Let's add some asserts for parameter combinations that will not render properly. One thing I notice is that if you make the petal outer radius too large the tip of the petal gets cut off at the edge of the flat part of the circular plate, so that would be one of the asserts. Please add whatever asserts you think are appropriate to prevent the user from entering parameter combinations that will not render properly.
