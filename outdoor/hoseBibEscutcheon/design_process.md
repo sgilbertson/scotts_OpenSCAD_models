@@ -2,6 +2,8 @@
 
 Here I am documenting how I did the design for the hose bib escutcheon. 
 
+## Initial commit
+
 Using Visual Studio Code with the OpenAI Codex extension installed I started with an OpenSCAD file that was empty apart from the following comment:
 
 ```c++
@@ -19,6 +21,24 @@ Using Visual Studio Code with the OpenAI Codex extension installed I started wit
 // - The design will be 3D printed with a raft and support, decorative side up
 ```
 
-Then I clicked the "Impement with Codex" pop-up prompt.
+Then I clicked the "Impement with Codex" pop-up prompt. I could equally have entered that specification to Claude, Gemini, ChatGPT etc. on the web, asking for it to return a source file, or I could have used GitHub Copilot in Visual Studio Code to generate the code. I just happened to be trying out the OpenAI Codex extension at the time.
 
-The result was my initial commit.
+The result was my initial commit. It did a nice job:
+
+![Initial Commit](images/initial_commit.png)
+
+# Revisions
+
+I asked for the following changes:
+
+- Eliminate the screw hole in the middle of the lower part, because the two other lower-half screws are sufficient.
+- Add a sleeve in the middle, protruding upward by a customizable distance, with an S-shaped revolved profile. The sleeve surrounds the pipe and privdes an attractive interface between the escutcheon and the pipe.
+- Modify the petals so that they start at the point where the sleeve becomes tangential to the main plate.
+- Make the screw head stype and layout selections use selection lists
+- Group the customizable parameters in sections
+- At the top add a selectable setting model_view: "Upper part", "Lower part", "Assembled", "Side by side" to control which parts are visible in the 3D view and how they are positioned. When exporting the upper or lower part, the positioning should be as it is for "assembled", so that the two STL files can be imported into Bambu Studio and will be aligned correctly as a single part if someone is installing the escutcheon over a bare (possibly threaded) pipe, before installing the hose bib.
+
+Result:
+
+![Commit 2](images/commit2.png)
+
