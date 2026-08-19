@@ -52,9 +52,9 @@ foam_clearance      = 0.4;
 // Sets the common radial distance of every screw hole from the model center.
 mount_radius         = 38;
 // Sets the diameter of the screw shank holes.
-screw_shank_diameter = 4;
+screw_shank_diameter = 4.1;
 // Sets the maximum diameter of each screw-head recess.
-screw_head_diameter  = 8;
+screw_head_diameter  = 9.5;
 // Sets the depth of each screw-head recess.
 screw_head_height    = 2.2;
 // Selects a conical flat-head recess or cylindrical round-head recess.
@@ -67,7 +67,7 @@ tab_radius          = 8;
 tab_thickness       = 2;
 // Sets the vertical and radial assembly clearance around the tabs.
 fit_clearance       = 0.25;
-// Widens each side of the upper pipe slot to prevent residual edge slivers.
+// Moves each angled slot edge into the adjacent petal gap to prevent slivers.
 slot_side_clearance = 0.25;
 
 /* [Resolution] */
@@ -102,8 +102,20 @@ cut_at_inner_edge = ceil((tangent_half_angle + petal_half_angle) / petal_pitch)
                     * petal_pitch - petal_half_angle;
 // Stores the selected petal-edge angle used for the upper/lower cut line.
 lower_half_angle = min(cut_at_outer_edge, cut_at_inner_edge);
-// Stores the angular locations of the two shared tab screw holes.
-tab_angles = [-135, -45];
+// Converts the linear slot-edge clearance to an angular offset at the sleeve.
+slot_clearance_angle = asin(min(0.999, slot_side_clearance / sleeve_base_radius));
+// Moves away from the selected petal edge in whichever direction enters its gap.
+split_half_angle = cut_at_outer_edge <= cut_at_inner_edge
+                   ? lower_half_angle + slot_clearance_angle
+                   : lower_half_angle - slot_clearance_angle;
+// Places each screw far enough inside the upper part to retain its full recess.
+tab_center_inset = max(screw_head_diameter / 2 + fit_clearance,
+                       tab_radius / 2);
+// Converts the desired screw-center inset to an angular offset from the seam.
+tab_angle_offset = asin(min(0.999, tab_center_inset / mount_radius));
+// Stores seam-relative screw angles that remain in both upper and lower parts.
+tab_angles = [-90 - split_half_angle - tab_angle_offset,
+              -90 + split_half_angle + tab_angle_offset];
 
 // Stop early with useful messages when a parameter set cannot form the model.
 assert(model_view == "Upper part" || model_view == "Lower part"
@@ -175,8 +187,12 @@ assert(tab_radius >= screw_head_diameter / 2 + fit_clearance,
        "tab_radius is too small to reinforce the screw-head recess.");
 assert(mount_radius + tab_radius + fit_clearance < outer_radius,
        "The tabs extend beyond the outside of the plate.");
-assert(tab_radius > mount_radius * sin(abs(45 - lower_half_angle)),
-       "The tab pads do not reach the lower part; increase tab_radius or adjust the petal geometry.");
+assert(split_half_angle > 0 && split_half_angle < 90,
+       "slot_side_clearance is too large for the calculated angled slot.");
+assert(mount_radius > tab_center_inset,
+       "mount_radius is too small to position the tab screws around the seam.");
+assert(tab_center_inset + fit_clearance < tab_radius,
+       "The screw inset leaves too little tab overlap with the lower part.");
 
 module sector2d(start_angle, end_angle, radius) {
     steps = ceil((end_angle - start_angle) / 6);
@@ -190,24 +206,24 @@ module sector2d(start_angle, end_angle, radius) {
 module upper_mask2d(extra = 0) {
     // The radial edges coincide with edges of the bottom-facing petal.
     difference() {
-        sector2d(-90 + lower_half_angle, 270 - lower_half_angle,
-                 outer_radius + extra);
-        pipe_channel2d(extra, slot_side_clearance);
-    }
-}
-
-module lower_mask2d(extra = 0) {
-    union() {
-        sector2d(270 - lower_half_angle, 270 + lower_half_angle,
+        sector2d(-90 + split_half_angle, 270 - split_half_angle,
                  outer_radius + extra);
         pipe_channel2d(extra);
     }
 }
 
-module pipe_channel2d(extra = 0, side_clearance = 0) {
+module lower_mask2d(extra = 0) {
+    union() {
+        sector2d(270 - split_half_angle, 270 + split_half_angle,
+                 outer_radius + extra);
+        pipe_channel2d(extra);
+    }
+}
+
+module pipe_channel2d(extra = 0) {
     // Parallel walls guarantee an opening as wide as the center hole.
-    translate([-pipe_radius - side_clearance, -outer_radius - extra])
-        square([2 * (pipe_radius + side_clearance), outer_radius + extra]);
+    translate([-pipe_radius, -outer_radius - extra])
+        square([2 * pipe_radius, outer_radius + extra]);
 }
 
 module tab_shape2d(clearance = 0) {
