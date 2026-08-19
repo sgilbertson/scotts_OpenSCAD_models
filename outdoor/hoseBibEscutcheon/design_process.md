@@ -73,7 +73,7 @@ I think this design is good enough that I'd be happy to use it now, although may
 
 My next prompt was:
 
-> In unsplit_escutcheon, instead of using cylinders, let's create a 2D sketch that includes the main curcular plate, the rim and the central sleeve, and then revolve that sketch to create the 3D shape. I think that will render more quickly, and it should also make it straightforward to round off the edge of the circular plate rather than making it angled.
+> In `unsplit_escutcheon`, instead of using cylinders, let's create a 2D sketch that includes the main curcular plate, the rim and the central sleeve, and then revolve that sketch to create the 3D shape. I think that will render more quickly, and it should also make it straightforward to round off the edge of the circular plate rather than making it angled.
 
 That got me (when rendered -- preview no longer works):
 
