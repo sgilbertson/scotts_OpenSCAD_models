@@ -89,4 +89,4 @@ Then (pasting an image of the preview with default parameters, which is broken):
 
 > Here is what the preview looks like with the default parameters. Rendering works fine, but in the preview a lot of objects are missing. Can we make the preview work without disturbing the rendering? The default model view is "Assembled", but the problem happens in all view modes. In every case only the screw holes and, if present, the tabs, are shown in the preview.
 
-(and it took a few additional prompts to get everything to preview properly)
+There were still some parts not previewing, so I prompted "More of it previews now, but not everything" with a pasted image, and that got me a preview that looks the same as the full render.
