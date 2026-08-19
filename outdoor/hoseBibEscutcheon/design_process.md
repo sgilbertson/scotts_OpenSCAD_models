@@ -71,8 +71,17 @@ I think this design is good enough that I'd be happy to use it now, although may
 
 ![Commit 4](images/commit4.png)
 
-My next prompt was: In unsplit_escutcheon, instead of using cylinders, let's create a 2D sketch that includes the main curcular plate, the rim and the central sleeve, and then revolve that sketch to create the 3D shape. I think that will render more quickly, and it should also make it straightforward to round off the edge of the circular plate rather than making it angled.
+My next prompt was:
+
+> In unsplit_escutcheon, instead of using cylinders, let's create a 2D sketch that includes the main curcular plate, the rim and the central sleeve, and then revolve that sketch to create the 3D shape. I think that will render more quickly, and it should also make it straightforward to round off the edge of the circular plate rather than making it angled.
 
 That got me (when rendered -- preview no longer works):
 
 ![Commit 5](images/commit5.png)
+
+For people who might want to create a single part and slide it over a pipe, I then prompted:
+
+> Let's add a new model view "All in one", which is just like "Assembled" except that it doesn't create and assemble two parts (i.e., there's no cut line). Instead, it creates the entire design as a single part, intended to be printed as a single part and then slid over a pipe. Also, please add a one-line comment above every parameter describing what the parameter does.
+
+I then made a slight tweak to one of the comments, but otherwise committed as-is. I didn't create an image, because that hasn't changed from the previous commit.
+
