@@ -12,7 +12,7 @@ front_diameter      = 110;
 body_thickness      = 5;
 
 /* [Decorative petals] */
-petal_count         = 12;       // A multiple of six keeps seams on petal edges.
+petal_count         = 12;       // Use a multiple of four to center a bottom petal.
 petal_width         = 12;
 petal_outer_radius  = 51;
 petal_height        = 1.8;
@@ -50,7 +50,16 @@ pipe_radius  = pipe_diameter / 2 + pipe_clearance;
 sleeve_top_radius = pipe_radius + sleeve_wall_thickness;
 sleeve_base_radius = sleeve_top_radius + sleeve_flare;
 total_height = body_thickness + max(petal_height, sleeve_height);
-lower_half_angle = 30;
+petal_pitch = 360 / petal_count;
+petal_half_angle = min(petal_pitch / 2 - 0.2,
+                       asin(min(0.999, petal_width / (2 * petal_outer_radius))));
+tangent_half_angle = asin(min(0.999, pipe_radius / sleeve_base_radius));
+// The two candidate expressions are the inner and outer edges of nearby petals.
+cut_at_outer_edge = ceil((tangent_half_angle - petal_half_angle) / petal_pitch)
+                    * petal_pitch + petal_half_angle;
+cut_at_inner_edge = ceil((tangent_half_angle + petal_half_angle) / petal_pitch)
+                    * petal_pitch - petal_half_angle;
+lower_half_angle = min(cut_at_outer_edge, cut_at_inner_edge);
 tab_angles = [-135, -45];
 
 module sector2d(start_angle, end_angle, radius) {
@@ -64,13 +73,25 @@ module sector2d(start_angle, end_angle, radius) {
 
 module upper_mask2d(extra = 0) {
     // The radial edges coincide with edges of the bottom-facing petal.
-    sector2d(-90 + lower_half_angle, 270 - lower_half_angle,
-             outer_radius + extra);
+    difference() {
+        sector2d(-90 + lower_half_angle, 270 - lower_half_angle,
+                 outer_radius + extra);
+        pipe_channel2d(extra);
+    }
 }
 
 module lower_mask2d(extra = 0) {
-    sector2d(270 - lower_half_angle, 270 + lower_half_angle,
-             outer_radius + extra);
+    union() {
+        sector2d(270 - lower_half_angle, 270 + lower_half_angle,
+                 outer_radius + extra);
+        pipe_channel2d(extra);
+    }
+}
+
+module pipe_channel2d(extra = 0) {
+    // Parallel walls guarantee an opening as wide as the center hole.
+    translate([-pipe_radius, -outer_radius - extra])
+        square([2 * pipe_radius, outer_radius + extra]);
 }
 
 module tab_shape2d(clearance = 0) {
@@ -86,11 +107,10 @@ module tab_shape2d(clearance = 0) {
 }
 
 module petal2d() {
-    // Each petal begins exactly at the sleeve's tangent point on the plate.
-    hull() {
-        translate([sleeve_base_radius, 0]) circle(r = 0.05, $fn = 8);
-        translate([petal_outer_radius, 0])
-            scale([0.62, 1]) circle(d = petal_width);
+    // Radial sides provide exact petal edges for concealing the part seam.
+    difference() {
+        sector2d(-petal_half_angle, petal_half_angle, petal_outer_radius);
+        circle(r = sleeve_base_radius - 0.05);
     }
 }
 
@@ -122,11 +142,11 @@ module unsplit_escutcheon() {
             for (a = [0 : 360 / petal_count : 359])
                 rotate([0, 0, a])
                     translate([0, 0, body_thickness - 0.01])
-                        linear_extrude(height = petal_height,
-                                       scale = front_radius / outer_radius)
+                        linear_extrude(height = petal_height)
                             intersection() {
                                 petal2d();
-                                circle(r = outer_radius - 1);
+                                // Keep even very wide petals on the flat front face.
+                                circle(r = front_radius - 0.1);
                             }
 
             // The projecting back rim retains a neoprene foam washer.

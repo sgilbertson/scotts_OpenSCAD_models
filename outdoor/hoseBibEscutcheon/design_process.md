@@ -1,6 +1,6 @@
 # Design process for the hose bib escutcheon
 
-Here I am documenting how I did the design for the hose bib escutcheon. 
+Here I am documenting how I did the design for the hose bib escutcheon. The way I see it, I designed the part and Codex wrote the code. This play-by-play may be an instructonal example for others who want to use Codex or other AI tools to help them with OpenSCAD design (showing either what to do or what not to do, depending on how you think I did).
 
 ## Initial commit
 
@@ -42,3 +42,19 @@ Result:
 
 ![Commit 2](images/commit2.png)
 
+I see some issues:
+
+- The petals have oddly sloped sides, which vary as you go around the circle. 
+- I don't think we're guaranteed to be able to place the upper part over the pipe. Maybe lower_mask2d needs to include a section near the pipe with parallel sides, so that the minimum width of the channel is the same as the diameter of the center hole.
+- If I increase the petal width, the petals protrude past the edge of main surface of the escutcheon.
+- Let's make the cut line coincident with the edge of a petal, rather than the center of a petal, so that the join is less visible. Maybe something like:
+    - find the points along the tangent line of the sleeve connection that are just wide enough to accommodate the pipe
+    - find the inner or outer edges of petals that are closest to those points, but outside of them, and use those as the cut line. That way the cut line is along the edge of a petal, and the petals will be wide enough to cover the pipe.
+
+Here's what I mean by the side slopes of the petals:
+
+~[images/commit2_issue1.png](images/commit2_issue1.png)
+
+Result:
+
+![Commit 3](images/commit3.png)
