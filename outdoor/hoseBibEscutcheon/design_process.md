@@ -73,7 +73,7 @@ I think this design is good enough that I'd be happy to use it now, although may
 
 My next prompt was:
 
-> In `unsplit_escutcheon`, instead of using cylinders, let's create a 2D sketch that includes the main curcular plate, the rim and the central sleeve, and then revolve that sketch to create the 3D shape. I think that will render more quickly, and it should also make it straightforward to round off the edge of the circular plate rather than making it angled.
+> In `unsplit_escutcheon`, instead of using cylinders, let's create a 2D sketch that includes the main circular plate, the rim and the central sleeve, and then revolve that sketch to create the 3D shape. I think that will render more quickly, and it should also make it straightforward to round off the edge of the circular plate rather than making it angled.
 
 That got me (when rendered -- preview no longer works):
 
@@ -121,3 +121,60 @@ Next prompt:
 There was a bit of back-and-forth, but that feature is now working. In this image I have configured a flat-head screw hole with the head recessed 1.4mm:
 
 ![Commit 8](images/commit8.png)
+
+# My configuration
+
+This is one of my particular hose bibs:
+
+![My Hose Bib](images/hoseBibPhoto.jpg)
+
+It's solidly mounted in that position. I could unscrew the hose bib, add a one-piece escutcheon then reinstall the bib, but that's plumbing, and I really, really detest plumbing. Hence the two-part design. Because it's a screw fitting, my center hole needed to clear the hexagonal part, which is a fair bit wider than the pipe.
+
+In the same directory as `hoseBibEscutcheon_v1.scad` I place `hoseBibEscutcheon_v1.json` with:
+
+```json
+{
+    "parameterSets": {
+        "100mm_8petal_gasket4mm": {
+            "$fn": "72",
+            "back_rim_depth": "4",
+            "back_rim_width": "3",
+            "body_thickness": "6",
+            "fit_clearance": "0.25",
+            "foam_clearance": "0.4",
+            "model_view": "Side by side",
+            "mount_radius": "38",
+            "outer_diameter": "100",
+            "part_gap": "8",
+            "petal_corner_radius": "2.5",
+            "petal_count": "8",
+            "petal_outer_radius": "45",
+            "petal_outer_thickness": "1.8",
+            "petal_width": "20",
+            "pipe_clearance": "1.2",
+            "pipe_diameter": "25.4",
+            "plate_edge_radius": "3",
+            "screw_head_depth": "1.4",
+            "screw_head_diameter": "10.3",
+            "screw_head_style": "Flat head",
+            "screw_shank_diameter": "4",
+            "sleeve_flare": "7",
+            "sleeve_height": "6",
+            "sleeve_profile_steps": "12",
+            "sleeve_wall_thickness": "2.4",
+            "slot_side_clearance": "0.25",
+            "tab_radius": "8",
+            "tab_thickness": "2"
+        }
+    },
+    "fileFormatVersion": "1"
+}
+```
+
+Open the design in OpenSCAD, select the preset, and you get my configuration:
+
+![Scott's 100mm escutcheon](images/scotts_100mm_escutcheon.png)
+
+That is the design I plan to print, in brown PETG.
+
+_Stay tuned for post-installation photos..._
