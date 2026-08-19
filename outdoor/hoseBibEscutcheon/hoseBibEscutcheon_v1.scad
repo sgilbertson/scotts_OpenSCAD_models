@@ -55,8 +55,8 @@ mount_radius         = 38;
 screw_shank_diameter = 4.1;
 // Sets the maximum diameter of each screw-head recess.
 screw_head_diameter  = 9.5;
-// Sets the depth of each screw-head recess.
-screw_head_height    = 2.2;
+// Sets how far the screw head is recessed below the highest intersected surface.
+screw_head_depth     = 0;   // [0.0:0.1:10.0]
 // Selects a conical flat-head recess or cylindrical round-head recess.
 screw_head_style     = "Flat head"; // [Flat head, Round head]
 
@@ -116,6 +116,8 @@ tab_angle_offset = asin(min(0.999, tab_center_inset / mount_radius));
 // Stores seam-relative screw angles that remain in both upper and lower parts.
 tab_angles = [-90 - split_half_angle - tab_angle_offset,
               -90 + split_half_angle + tab_angle_offset];
+// Stores the axial height of the 90-degree flat-head countersink cone.
+countersink_height = (screw_head_diameter - screw_shank_diameter) / 2;
 
 // Stop early with useful messages when a parameter set cannot form the model.
 assert(model_view == "Upper part" || model_view == "Lower part"
@@ -157,8 +159,11 @@ assert(screw_shank_diameter > 0,
        "screw_shank_diameter must be greater than zero.");
 assert(screw_head_diameter >= screw_shank_diameter,
        "screw_head_diameter must not be smaller than screw_shank_diameter.");
-assert(screw_head_height > 0 && screw_head_height <= body_thickness,
-       "screw_head_height must be greater than zero and no larger than body_thickness.");
+assert(screw_head_depth >= 0,
+       "screw_head_depth must be zero or greater.");
+assert(screw_head_depth + (screw_head_style == "Flat head"
+                           ? countersink_height : 0) < body_thickness,
+       "The screw-head recess is too deep for the main plate.");
 
 assert(tab_radius > 0, "tab_radius must be greater than zero.");
 assert(tab_thickness > 0 && tab_thickness + fit_clearance < body_thickness,
@@ -323,19 +328,39 @@ module unsplit_escutcheon() {
     escutcheon_solid();
 }
 
+function screw_petal_angle_distance(angle) =
+    abs(angle - round(angle / petal_pitch) * petal_pitch);
+
+function screw_center_is_on_petal(angle) =
+    mount_radius > sleeve_base_radius
+    && mount_radius < petal_outer_radius
+    && screw_petal_angle_distance(angle) <= petal_half_angle;
+
+function screw_surface_height(angle) =
+    body_thickness
+    + (screw_center_is_on_petal(angle) ? petal_outer_thickness : 0);
+
 module screw_hole(angle) {
+    surface_height = screw_surface_height(angle);
+    recess_top = surface_height - screw_head_depth;
+
     rotate([0, 0, angle]) translate([mount_radius, 0, 0]) {
         translate([0, 0, -back_rim_depth - 1])
             cylinder(h = total_height + back_rim_depth + 2,
                      d = screw_shank_diameter);
-        if (screw_head_style == "Flat head")
-            translate([0, 0, body_thickness - screw_head_height])
-                cylinder(h = screw_head_height + petal_outer_thickness + 1,
-                         d1 = screw_shank_diameter,
-                         d2 = screw_head_diameter);
+        if (screw_head_style == "Flat head") {
+            if (countersink_height > 0)
+                translate([0, 0, recess_top - countersink_height - 0.01])
+                    cylinder(h = countersink_height + 0.02,
+                             d1 = screw_shank_diameter,
+                             d2 = screw_head_diameter);
+            translate([0, 0, recess_top - 0.01])
+                cylinder(h = total_height - recess_top + 1.01,
+                         d = screw_head_diameter);
+        }
         else if (screw_head_style == "Round head")
-            translate([0, 0, body_thickness - screw_head_height])
-                cylinder(h = screw_head_height + petal_outer_thickness + 1,
+            translate([0, 0, recess_top - 0.01])
+                cylinder(h = total_height - recess_top + 1.01,
                          d = screw_head_diameter);
     }
 }

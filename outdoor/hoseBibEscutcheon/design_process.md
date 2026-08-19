@@ -94,3 +94,27 @@ There were still some parts not previewing, so I prompted "More of it previews n
 Then:
 
 > Let's add some asserts for parameter combinations that will not render properly. One thing I notice is that if you make the petal outer radius too large the tip of the petal gets cut off at the edge of the flat part of the circular plate, so that would be one of the asserts. Please add whatever asserts you think are appropriate to prevent the user from entering parameter combinations that will not render properly.
+
+At this point I started trying various combinations of parameters, to see if there were any parameter-specific ones. With all default values except `petal_outer_radius=56` (as high as it can go before asserting), the lower screw holes don't pass through both parts.
+
+![Commit 6 problem with longer petals](images/commit6-problem-longerPetals.png)
+
+Next prompt:
+
+> Testing combinations of settings, I noticed:
+> 
+> - The lower screw holes don't pass through both parts when `petal_outer_radius=56` with all other parameters at default. The lower screw holes need to always be in a part of the design that passes through the upper part as well as the tabs on the lower part.
+> - With some combinations of parameters there is a thin sliver of the petal that appears on each side of the slot in the lower part
+> - The slot_side_clearance setting affects the slot where it interacts with the sleeve. I think that's incorrect, and that it should affect the > positioning of the angled part of the slot, which is next to a petal. With some combinations of settings I get a sliver of petal on each side of the > lower part, and the setting doesn't help. There is no need for a setting to affect the slot where it interacts with the sleeve, because by definition > the width of the center hole is the correct width for that part of the slot.
+
+While configuring for my particular usage, I noticed that the size of the screw hole for a flat head screw varies depending on where it is relative to the petals:
+
+![Commit 7 problem with variable hole sizes](images/commit7-problem-holeSizeVariesByHeight.png)
+
+Next prompt:
+
+> I'd like to change how screw_head_diameter and screw_head_height work for flat head screws. Currently the diameter of the top of the screw hole is different, depending on whether the hole is on a petal vs the space between petals. For flat head screws, we can assume a countersink angle of 90 degrees (45 degree slopes). Knowing the shank and head diameters, based on that angle you can calculate the height of the countersink portion of the screw hole. We could redefine screw_head_height as screw_head_depth, and make it the depth of the allowance for the screw head below the highest surface perforated by the screw (the petal height or the flat space height), so for flat head screws screw_head_height=0 means the head sits against the surface, and for flat head screws zero means the head of the screw is flush with the surface. I realize it could be tricky where you have the hole over the sloped part of a petal, so in that case it would be acceptable to use the full petal depth to define the height of the surface for the hole.
+
+There was a bit of back-and-forth, but that feature is now working. In this image I have configured a flat-head screw hole with the head recessed 1.4mm:
+
+![Commit 8](images/commit8.png)
