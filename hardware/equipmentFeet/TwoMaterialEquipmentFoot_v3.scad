@@ -438,8 +438,8 @@ module upper_dampener_2d_profile() {
                 [r_cone_bot, 0],
                 
                 (outer_fillet_radius > 0.0) ? 
-                    [r_cone_top + (outer_fillet_radius * sin(cone_angle)) - (dist_to_tangent * sin(cone_angle)), 
-                     tpu_actual_height - (outer_fillet_radius * cos(cone_angle)) + (dist_to_tangent * cos(cone_angle))] 
+                    [r_cone_top + (dist_to_tangent * sin(cone_angle)),
+                     tpu_actual_height - (dist_to_tangent * cos(cone_angle))]
                     : [r_cone_top, tpu_actual_height],
                 
                 (outer_fillet_radius > 0.0) ? [r_cone_top - dist_to_tangent, tpu_actual_height] : [r_cone_top, tpu_actual_height],
