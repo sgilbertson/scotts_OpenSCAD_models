@@ -70,3 +70,9 @@ Now I see these issues:
 I think this design is good enough that I'd be happy to use it now, although maybe some things could be rounded off or otherwise embelleshed, to be more decorative.
 
 ![Commit 4](images/commit4.png)
+
+My next prompt was: In unsplit_escutcheon, instead of using cylinders, let's create a 2D sketch that includes the main curcular plate, the rim and the central sleeve, and then revolve that sketch to create the 3D shape. I think that will render more quickly, and it should also make it straightforward to round off the edge of the circular plate rather than making it angled.
+
+That got me (when rendered -- preview no longer works):
+
+![Commit 5](images/commit5.png)

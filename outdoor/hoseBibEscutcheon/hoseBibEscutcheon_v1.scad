@@ -8,8 +8,8 @@ part_gap = 8;
 pipe_diameter       = 25.4;
 pipe_clearance      = 1.2;
 outer_diameter      = 120;
-front_diameter      = 110;
 body_thickness      = 5;
+plate_edge_radius   = 3;
 
 /* [Decorative petals] */
 petal_count         = 12;       // Use a multiple of four to center a bottom petal.
@@ -47,7 +47,7 @@ $fn                 = 72;
 
 /* [Hidden] */
 outer_radius = outer_diameter / 2;
-front_radius = front_diameter / 2;
+front_radius = outer_radius - plate_edge_radius;
 pipe_radius  = pipe_diameter / 2 + pipe_clearance;
 sleeve_top_radius = pipe_radius + sleeve_wall_thickness;
 sleeve_base_radius = sleeve_top_radius + sleeve_flare;
@@ -146,9 +146,8 @@ module petals() {
     }
 }
 
-module sleeve() {
-    // Smoothstep makes an S-shaped profile with a horizontal tangent at the plate.
-    outer_profile = [
+function sleeve_outer_profile() =
+    [
         for (i = [0 : sleeve_profile_steps])
             let(t = i / sleeve_profile_steps,
                 smooth_t = t * t * (3 - 2 * t))
@@ -156,33 +155,38 @@ module sleeve() {
                 - (sleeve_base_radius - sleeve_top_radius) * t,
              body_thickness + sleeve_height * smooth_t]
     ];
-    rotate_extrude(convexity = 4)
-        polygon(concat(outer_profile,
-                       [[pipe_radius, body_thickness + sleeve_height],
-                        [pipe_radius, body_thickness - 0.01]]));
+
+function plate_edge_profile() =
+    [
+        for (i = [0 : 8])
+            let(a = 90 - 90 * i / 8)
+            [outer_radius - plate_edge_radius + plate_edge_radius * cos(a),
+             body_thickness - plate_edge_radius + plate_edge_radius * sin(a)]
+    ];
+
+module escutcheon_profile2d() {
+    sleeve_profile = sleeve_outer_profile();
+    rim_inner_radius = outer_radius - back_rim_width - foam_clearance;
+
+    // Trace one closed radial section: pipe wall, sleeve, plate, and back rim.
+    polygon(concat(
+        [[pipe_radius, 0],
+         [pipe_radius, body_thickness + sleeve_height],
+         [sleeve_top_radius, body_thickness + sleeve_height]],
+        [for (i = [len(sleeve_profile) - 1 : -1 : 0]) sleeve_profile[i]],
+        plate_edge_profile(),
+        [[outer_radius, -back_rim_depth],
+         [rim_inner_radius, -back_rim_depth],
+         [rim_inner_radius, 0]]
+    ));
 }
 
 module unsplit_escutcheon() {
-    difference() {
-        union() {
-            cylinder(h = body_thickness, r1 = outer_radius,
-                     r2 = front_radius);
+    union() {
+        rotate_extrude(convexity = 6) escutcheon_profile2d();
 
-            sleeve();
-
-            // Inner halves rise as wedges; outer halves stay broad and flat.
-            petals();
-
-            // The projecting back rim retains a neoprene foam washer.
-            translate([0, 0, -back_rim_depth])
-                linear_extrude(height = back_rim_depth + 0.01)
-                    difference() {
-                        circle(r = outer_radius);
-                        circle(r = outer_radius - back_rim_width - foam_clearance);
-                    }
-        }
-        translate([0, 0, -back_rim_depth - 1])
-            cylinder(h = total_height + back_rim_depth + 2, r = pipe_radius);
+        // Inner halves rise as wedges; outer halves stay broad and flat.
+        petals();
     }
 }
 
