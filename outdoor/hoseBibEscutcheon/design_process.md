@@ -122,6 +122,12 @@ There was a bit of back-and-forth, but that feature is now working. In this imag
 
 ![Commit 8](images/commit8.png)
 
+Some people might want to print an escutcheon without allowance for foam at the back, which can be printed without supports, so:
+
+> Please allow `back_rim_depth` to be zero, so that an escutcheon can be printed without supports.
+> That might be an important feature for some people.
+> Also please add a decimal place to that setting.
+
 # My configuration
 
 This is one of my particular hose bibs:

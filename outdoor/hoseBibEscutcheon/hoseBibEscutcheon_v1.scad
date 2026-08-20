@@ -44,7 +44,7 @@ sleeve_profile_steps  = 12;
 // Sets the radial width of the projecting rim on the back of the plate.
 back_rim_width      = 3;
 // Sets how far the back rim projects behind the plate.
-back_rim_depth      = 2;
+back_rim_depth      = 2.0; // [0.0:0.1:10.0]
 // Adds radial allowance inside the rim for the neoprene foam insert.
 foam_clearance      = 0.4;
 
@@ -151,7 +151,7 @@ assert(sleeve_profile_steps >= 3,
        "sleeve_profile_steps must be at least three.");
 
 assert(back_rim_width > 0, "back_rim_width must be greater than zero.");
-assert(back_rim_depth > 0, "back_rim_depth must be greater than zero.");
+assert(back_rim_depth >= 0, "back_rim_depth must be zero or greater.");
 assert(foam_clearance >= 0, "foam_clearance must be zero or greater.");
 
 assert(mount_radius > 0, "mount_radius must be greater than zero.");
@@ -302,6 +302,11 @@ function plate_edge_profile() =
 module escutcheon_profile2d() {
     sleeve_profile = sleeve_outer_profile();
     rim_inner_radius = outer_radius - back_rim_width - foam_clearance;
+    back_profile = back_rim_depth > 0
+        ? [[outer_radius, -back_rim_depth],
+           [rim_inner_radius, -back_rim_depth],
+           [rim_inner_radius, 0]]
+        : [[outer_radius, 0]];
 
     // Trace one closed radial section: pipe wall, sleeve, plate, and back rim.
     polygon(concat(
@@ -309,9 +314,7 @@ module escutcheon_profile2d() {
          [pipe_radius, body_thickness + sleeve_height]],
         [for (i = [len(sleeve_profile) - 1 : -1 : 0]) sleeve_profile[i]],
         plate_edge_profile(),
-        [[outer_radius, -back_rim_depth],
-         [rim_inner_radius, -back_rim_depth],
-         [rim_inner_radius, 0]]
+        back_profile
     ));
 }
 
