@@ -59,6 +59,8 @@ screw_head_diameter  = 9.5;
 screw_head_depth     = 0;   // [0.0:0.1:10.0]
 // Selects a conical flat-head recess or cylindrical round-head recess.
 screw_head_style     = "Flat head"; // [Flat head, Round head]
+// Sets the integrated standoff wall thickness; zero disables standoffs.
+standoff_wall_thickness = 1.0; // [0.0:0.1:5.0]
 
 /* [Part connection] */
 // Sets the radius of the reinforced pads around the two tab screws.
@@ -118,6 +120,8 @@ tab_angles = [-90 - split_half_angle - tab_angle_offset,
               -90 + split_half_angle + tab_angle_offset];
 // Stores the axial height of the 90-degree flat-head countersink cone.
 countersink_height = (screw_head_diameter - screw_shank_diameter) / 2;
+// Stores the outside radius of each integrated screw standoff.
+standoff_outer_radius = screw_shank_diameter / 2 + standoff_wall_thickness;
 
 // Stop early with useful messages when a parameter set cannot form the model.
 assert(model_view == "Upper part" || model_view == "Lower part"
@@ -161,6 +165,8 @@ assert(screw_head_diameter >= screw_shank_diameter,
        "screw_head_diameter must not be smaller than screw_shank_diameter.");
 assert(screw_head_depth >= 0,
        "screw_head_depth must be zero or greater.");
+assert(standoff_wall_thickness >= 0,
+       "standoff_wall_thickness must be zero or greater.");
 assert(screw_head_depth + (screw_head_style == "Flat head"
                            ? countersink_height : 0) < body_thickness,
        "The screw-head recess is too deep for the main plate.");
@@ -198,6 +204,13 @@ assert(mount_radius > tab_center_inset,
        "mount_radius is too small to position the tab screws around the seam.");
 assert(tab_center_inset + fit_clearance < tab_radius,
        "The screw inset leaves too little tab overlap with the lower part.");
+assert(standoff_wall_thickness == 0
+       || (mount_radius - standoff_outer_radius > pipe_radius
+           && mount_radius + standoff_outer_radius
+              < outer_radius - back_rim_width - foam_clearance),
+       "The standoffs do not fit between the pipe opening and the back rim.");
+assert(standoff_wall_thickness == 0 || standoff_outer_radius < tab_radius,
+       "The standoffs are too wide for the lower screw tabs.");
 
 module sector2d(start_angle, end_angle, radius) {
     steps = ceil((end_angle - start_angle) / 6);
@@ -343,6 +356,14 @@ function screw_surface_height(angle) =
     body_thickness
     + (screw_center_is_on_petal(angle) ? petal_outer_thickness : 0);
 
+module screw_standoff(angle) {
+    if (standoff_wall_thickness > 0 && back_rim_depth > 0)
+        rotate([0, 0, angle])
+            translate([mount_radius, 0, -back_rim_depth])
+                cylinder(h = back_rim_depth + 0.01,
+                         r = standoff_outer_radius);
+}
+
 module screw_hole(angle) {
     surface_height = screw_surface_height(angle);
     recess_top = surface_height - screw_head_depth;
@@ -370,11 +391,14 @@ module screw_hole(angle) {
 
 module upper_part_geometry() {
     difference() {
-        intersection() {
-            unsplit_escutcheon();
-            translate([0, 0, -back_rim_depth - 0.1])
-                linear_extrude(height = total_height + back_rim_depth + 0.2)
-                    upper_mask2d(1);
+        union() {
+            intersection() {
+                unsplit_escutcheon();
+                translate([0, 0, -back_rim_depth - 0.1])
+                    linear_extrude(height = total_height + back_rim_depth + 0.2)
+                        upper_mask2d(1);
+            }
+            screw_standoff(90);
         }
         translate([0, 0, -0.01])
             linear_extrude(height = tab_thickness + fit_clearance)
@@ -407,6 +431,7 @@ module lower_part_geometry() {
                     tab_shape2d();
                     circle(r = pipe_radius);
                 }
+            for (a = tab_angles) screw_standoff(a);
         }
         for (a = tab_angles) screw_hole(a);
     }
@@ -427,7 +452,11 @@ module assembled() {
 
 module all_in_one_geometry() {
     difference() {
-        unsplit_escutcheon();
+        union() {
+            unsplit_escutcheon();
+            screw_standoff(90);
+            for (a = tab_angles) screw_standoff(a);
+        }
         screw_hole(90);
         for (a = tab_angles) screw_hole(a);
     }

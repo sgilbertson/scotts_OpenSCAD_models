@@ -128,6 +128,14 @@ Some people might want to print an escutcheon without allowance for foam at the 
 > That might be an important feature for some people.
 > Also please add a decimal place to that setting.
 
+Having printed one, I noticed a potential issue:
+
+> Let's add a setting to create integrated standoffs for the screws, which will be the same length as `back_rim_depth`,
+> with the same hole diameter as `screw_shank_diameter`. The setting should define the thickness of the walls of the
+> standoff, defaulting to 1.0, where zero means "do not create integrated standoffs". The idea is to extend the screw
+> holes back to the wall, for better stability. The standoffs should of course be created only if `back_rim_depth`
+> is greater than zero. Some makers might elect to omit the standoffs for reasons that haven't occurred to me.
+
 # My configuration
 
 This is one of my particular hose bibs:
@@ -169,6 +177,7 @@ In the same directory as `hoseBibEscutcheon_v1.scad` I place `hoseBibEscutcheon_
             "sleeve_profile_steps": "12",
             "sleeve_wall_thickness": "2.4",
             "slot_side_clearance": "0.25",
+            "standoff_wall_thickness": "1.5",
             "tab_radius": "8",
             "tab_thickness": "2"
         }
