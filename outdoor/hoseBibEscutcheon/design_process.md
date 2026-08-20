@@ -171,7 +171,7 @@ In the same directory as `hoseBibEscutcheon_v1.scad` I place `hoseBibEscutcheon_
             "screw_head_depth": "1.4",
             "screw_head_diameter": "10.3",
             "screw_head_style": "Flat head",
-            "screw_shank_diameter": "4",
+            "screw_shank_diameter": "4.5",
             "sleeve_flare": "7",
             "sleeve_height": "6",
             "sleeve_profile_steps": "12",
