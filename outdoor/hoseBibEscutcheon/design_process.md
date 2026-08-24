@@ -1,6 +1,6 @@
 # Design process for the hose bib escutcheon
 
-Here I am documenting how I did the design for the hose bib escutcheon. The way I see it, I designed the part and Codex wrote the code. This play-by-play may be an instructonal example for others who want to use Codex or other AI tools to help them with OpenSCAD design (showing either what to do or what not to do, depending on how you think I did).
+Here I am documenting how I did the design for the hose bib escutcheon. The way I see it, I designed the part and OpenAI Codex (ChatGPT, basically) wrote the code. This play-by-play may be an instructonal example for others who want to use Codex or other AI tools to help them with OpenSCAD design (showing either what to do or what not to do, depending on how you think I did).
 
 ## Initial commit
 
@@ -190,6 +190,14 @@ Open the design in OpenSCAD, select the preset, and you get my configuration:
 
 ![Scott's 100mm escutcheon](images/scotts_100mm_escutcheon.png)
 
-That is the design I plan to print, in brown PETG.
+That is the design I printed, in brown PETG.
 
-_Stay tuned for post-installation photos..._
+# Results
+
+One of the hose bibs has a flat area on which to mount, so it was straightforward.
+
+![close up photo of installed plate #1](images/EscutcheonInstalledCloseUp.jpg)
+
+This one was more difficult, because the part of the wall around the hose bib has various slopes and recesses. I had to cut a foam piece to fill one area, so that bugs wouldn't make homes there. I broke the tabs on my first try, and had to print another one, which installed without tightening the screws as much.
+
+![close up photo of installed plate #2](images/Escutcheon2InstalledCloseUp.jpg)
