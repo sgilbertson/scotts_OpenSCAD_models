@@ -2,6 +2,8 @@
 
 This is a 100% parametric, high-utility anti-vibration equipment foot featuring a hard, rigid base plate integrated with a flexible vibration-damping upper body. Ot os designed specifically for dual-toolhead printers like the Bambu Lab X2D.
 
+It is published on MakerWorld: [makerworld.com/en/models/3214790-parametric-foot-for-equipment-furniture-etc](https://makerworld.com/en/models/3214790-parametric-foot-for-equipment-furniture-etc)
+
 In this document I've assumed that the rigid section is PETG (for strength around the screw hole) and the flexible section is TPU (for flexibility).
 
 Since the two materials are physically interlocked rather than chemically bonded, this design is compatible with any combination of materials that can be printed together on a dual-toolhead printer.
