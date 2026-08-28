@@ -76,12 +76,44 @@ line_count = max(1, len(text_lines));
 font_style = text_style == "Normal" ? "Regular" : text_style;
 text_font = str(text_typeface, ":style=", font_style);
 
-// A conservative font-size estimate keeps even wide glyphs inside the target circle.
+// Estimate glyph advances rather than counting characters. OpenSCAD 2021 has no
+// textmetrics(), so family/style corrections keep the supported fonts consistent.
 function longest_line(i = 0, best = 0) =
     i >= len(text_lines) ? best : longest_line(i + 1, max(best, len(text_lines[i])));
+function is_in(c, chars) = len(search(c, chars)) > 0;
+function glyph_advance(c) =
+    is_in(c, " !'(),.:;I[]`ijl|") ? 0.30 :
+    is_in(c, "frt") ? 0.40 :
+    is_in(c, "mw") ? 0.82 :
+    is_in(c, "MW@%&") ? 1.06 :
+    is_in(c, "ABCDEFGHJKLMNOPQRSTUVWXYZ") ? 0.69 :
+    is_in(c, "0123456789") ? 0.58 : 0.56;
+function estimated_line_width(s, i = 0, total = 0) =
+    i >= len(s) ? total : estimated_line_width(s, i + 1,
+        total + glyph_advance(s[i]));
+is_monospace = text_typeface == "Liberation Mono" ||
+               text_typeface == "DejaVu Sans Mono";
+is_serif = text_typeface == "Liberation Serif" ||
+           text_typeface == "DejaVu Serif";
+function line_width_units(s) =
+    is_monospace ? len(s) * 0.62 :
+    estimated_line_width(s) *
+        (is_serif ? 1.25 :
+         text_typeface == "DejaVu Sans" ? 1.05 : 1) *
+        (text_style == "Bold Italic" ? 1.10 :
+         text_style == "Italic" ? 1.06 :
+         text_style == "Bold" ? 1.04 : 1);
+function line_radius_units(i) =
+    let(x = line_width_units(text_lines[i]) / 2,
+        y = abs((line_count - 1) * line_spacing / 2 - i * line_spacing) + 0.55)
+    sqrt(x * x + y * y);
+function largest_text_radius(i = 0, best = 0) =
+    i >= len(text_lines) ? best :
+        largest_text_radius(i + 1, max(best, line_radius_units(i)));
+
 text_zone = lid_diameter * text_fit_percent / 100;
-font_size = min(text_zone / max(1, longest_line()) * 1.55,
-                text_zone / max(1, line_count * line_spacing));
+// This margin covers italic overhang and font-renderer metric variation.
+font_size = text_zone / 2 / max(0.01, largest_text_radius()) / 1.12;
 
 // Build the complete cross-section as one polygon. Besides being fast, this avoids
 // coincident surfaces that can make the F5 preview look hollow or striped.
