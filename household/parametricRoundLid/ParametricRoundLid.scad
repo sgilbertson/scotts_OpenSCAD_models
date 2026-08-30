@@ -62,8 +62,8 @@ assert(top_chamfer >= 0 && top_chamfer < top_thickness &&
        "top_chamfer must fit within both the top and lip");
 assert(text_fit_percent > 0 && text_fit_percent <= 100,
        "text_fit_percent must be in the range 0..100");
-assert(text_depth >= 0 && text_depth < top_thickness,
-       "text_depth must be less than top_thickness");
+assert(text_depth >= 0 && text_depth <= top_thickness,
+       "text_depth must not exceed top_thickness");
 assert(text_height >= 0, "text_height cannot be negative");
 assert(print_orientation == "Top Up" || print_orientation == "Top Down",
        "Unknown print_orientation");
@@ -181,13 +181,23 @@ module engraving_solid() {
                 lettering_2d();
 }
 
+module engraved_lid() {
+    difference() {
+        lid_solid();
+        engraving_solid();
+    }
+}
+
 module lid_component() {
     color(lid_preview_color)
-        if (longest_line() > 0 && text_depth > 0)
-            difference() {
-                lid_solid();
-                engraving_solid();
-            }
+        if (longest_line() > 0 && text_depth > 0) {
+            // OpenCSG can hide the minuend when the colored inlay overlaps its
+            // cutter. Resolve this one boolean for reliable F5 previews.
+            if ($preview)
+                render(convexity = 4) engraved_lid();
+            else
+                engraved_lid();
+        }
         else
             lid_solid();
 }
