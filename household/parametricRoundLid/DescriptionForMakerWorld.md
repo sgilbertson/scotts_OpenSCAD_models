@@ -54,7 +54,7 @@ Select **Single Part**, choose the desired print orientation, and export the com
 
 **Top Down** usually gives the cleanest unsupported top surface when the text is flush or recessed. The lower lip edge is rounded in this orientation. Raised text will require supports when printed top-down.
 
-**Top Up** places the bottom of the lip on the build plate. This is useful for raised lettering, but the underside of the lid panel may require supports. The lip receives a chamfered or square lower edge appropriate to this orientation.
+**Top Up** places the bottom of the lip on the build plate. This is useful for raised lettering, but the underside of the lid panel may require supports. One-eighth-circle transitions meet the outer lip walls tangentially and leave a flat contact area on the build plate.
 
 ### Two-material print
 
@@ -70,7 +70,7 @@ The **Single Part** view previews the lid and lettering together in different co
 ## Fit and material considerations
 
 - Measure the container in several places; thin cans and cups may not be perfectly round.
-    - You can also put some tape on the rim of the container and make a mark, then roll it over a sheet of paper to measure the circumference. Divide by Pi and that's the diameter.
+    - You can also wrap a strip of paper around the container and make a mark to measure the circumference (like taking a waist measurement). Divide by Pi and that's the diameter.
 - Material shrinkage, extrusion width, and printer calibration all affect the final fit.
 - PLA is easy to print but relatively rigid. PETG may provide a tougher and slightly more flexible snap lip. TPU is more flexible, allowing a tighter fit. Other materials can work if their properties suit the application.
 - Start with a modest retaining bead and adjust it after a fit test. An overly large bead can make the lid difficult to install or remove.

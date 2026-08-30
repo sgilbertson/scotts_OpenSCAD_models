@@ -142,16 +142,24 @@ function reversed(values) =
 // Build the complete cross-section as one polygon. Besides being fast, this avoids
 // coincident surfaces that can make the F5 preview look hollow or striped.
 module lid_solid() {
-    round_r = min(lip_thickness / 2, 1);
-    lower_chamfer = min(top_chamfer, lip_thickness / 2, lip_height / 2);
-    rounded_bottom = print_orientation == "Top Down" && lip_thickness > 0.6;
+    round_r = min(lip_thickness / 2, lip_height, 1);
+    rounded_bottom = print_orientation == "Top Down";
+
+    // In the top-up orientation, use a 45-degree (one-eighth circle) arc
+    // tangent to each vertical wall. A one-third radial span on both sides
+    // leaves the middle third of the lip flat on the build plate.
+    desired_arc_span = lip_thickness / 3;
+    bottom_arc_r = min(desired_arc_span / (1 - cos(45)),
+                       lip_height / sin(45));
+    bottom_arc_height = bottom_arc_r * sin(45);
 
     outer_bottom = rounded_bottom
         ? [for (a = [0 : -15 : -90])
               [outer_r - round_r + round_r * cos(a),
                -lip_height + round_r + round_r * sin(a)]]
-        : [[outer_r, -lip_height + lower_chamfer],
-           [outer_r - lower_chamfer, -lip_height]];
+        : [for (a = [0 : -7.5 : -45])
+              [outer_r - bottom_arc_r + bottom_arc_r * cos(a),
+               -lip_height + bottom_arc_height + bottom_arc_r * sin(a)]];
 
     // A bead supplies the entire inner rounding; otherwise use the selected
     // print-orientation treatment on the inner lower corner.
@@ -163,8 +171,9 @@ module lid_solid() {
             ? [for (a = [-90 : -15 : -180])
                   [inner_r + round_r + round_r * cos(a),
                    -lip_height + round_r + round_r * sin(a)]]
-            : [[inner_r + lower_chamfer, -lip_height],
-               [inner_r, -lip_height + lower_chamfer]];
+            : [for (a = [-135 : -7.5 : -180])
+                  [inner_r + bottom_arc_r + bottom_arc_r * cos(a),
+                   -lip_height + bottom_arc_height + bottom_arc_r * sin(a)]];
 
     rotate_extrude(convexity = 4)
         polygon(concat(
