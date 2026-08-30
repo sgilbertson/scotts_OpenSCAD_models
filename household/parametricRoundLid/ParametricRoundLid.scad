@@ -25,7 +25,9 @@ top_chamfer = 1;
 // One quoted string per line; use ["FIRST LINE", "SECOND LINE"] for newlines.
 text_lines = [""];
 // Typeface used for the lid text.
-text_typeface = "Liberation Sans"; // [Liberation Sans, Liberation Serif, Liberation Mono, DejaVu Sans, DejaVu Serif, DejaVu Sans Mono]
+text_typeface = "Liberation Sans"; // [Liberation Sans, Liberation Serif, Liberation Mono, Custom]
+// Installed font family name used when text_typeface is Custom.
+custom_typeface = "";
 // Typeface style. Unsupported styles fall back to the closest installed style.
 text_style = "Bold"; // [Normal, Bold, Italic, Bold Italic]
 // Maximum diameter occupied by the text, as a percentage of lid_diameter.
@@ -76,7 +78,11 @@ outer_r = inner_r + lip_thickness;
 bead_r = bead_diameter / 2;
 line_count = max(1, len(text_lines));
 font_style = text_style == "Normal" ? "Regular" : text_style;
-text_font = str(text_typeface, ":style=", font_style);
+selected_typeface = text_typeface == "Custom" ? custom_typeface : text_typeface;
+text_font = str(selected_typeface, ":style=", font_style);
+
+assert(text_typeface != "Custom" || len(custom_typeface) > 0,
+       "Enter a custom_typeface when text_typeface is Custom");
 
 // Estimate glyph advances rather than counting characters. OpenSCAD 2021 has no
 // textmetrics(), so family/style corrections keep the supported fonts consistent.
@@ -93,15 +99,13 @@ function glyph_advance(c) =
 function estimated_line_width(s, i = 0, total = 0) =
     i >= len(s) ? total : estimated_line_width(s, i + 1,
         total + glyph_advance(s[i]));
-is_monospace = text_typeface == "Liberation Mono" ||
-               text_typeface == "DejaVu Sans Mono";
-is_serif = text_typeface == "Liberation Serif" ||
-           text_typeface == "DejaVu Serif";
+is_monospace = text_typeface == "Liberation Mono";
+is_serif = text_typeface == "Liberation Serif";
 function line_width_units(s) =
     is_monospace ? len(s) * 0.62 :
     estimated_line_width(s) *
         (is_serif ? 1.25 :
-         text_typeface == "DejaVu Sans" ? 1.05 : 1) *
+         text_typeface == "Custom" ? 1.12 : 1) *
         (text_style == "Bold Italic" ? 1.10 :
          text_style == "Italic" ? 1.06 :
          text_style == "Bold" ? 1.04 : 1);
