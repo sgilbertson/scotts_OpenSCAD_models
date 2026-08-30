@@ -31,7 +31,7 @@ text_style = "Bold"; // [Normal, Bold, Italic, Bold Italic]
 // Maximum diameter occupied by the text, as a percentage of lid_diameter.
 text_fit_percent = 85;
 // Engraving/inlay depth below the top surface (mm).
-text_depth = 0;
+text_depth = 0; // [0:0.1:10]
 // Height of lettering above the top surface (mm).
 text_height = 0.6;
 // Extra spacing between lines, as a multiple of the calculated font size.
@@ -46,6 +46,8 @@ facet_count = 128;
 
 $fn = $preview ? min(facet_count, 72) : facet_count;
 eps = 0.01;
+lid_preview_color = [0.95, 0.72, 0.08];
+lettering_preview_color = [0.15, 0.38, 0.85];
 
 assert(lid_diameter > 0, "lid_diameter must be positive");
 assert(top_thickness > 0, "top_thickness must be positive");
@@ -114,6 +116,8 @@ function largest_text_radius(i = 0, best = 0) =
 text_zone = lid_diameter * text_fit_percent / 100;
 // This margin covers italic overhang and font-renderer metric variation.
 font_size = text_zone / 2 / max(0.01, largest_text_radius()) / 1.12;
+function reversed(values) =
+    [for (i = [len(values) - 1 : -1 : 0]) values[i]];
 
 // Build the complete cross-section as one polygon. Besides being fast, this avoids
 // coincident surfaces that can make the F5 preview look hollow or striped.
@@ -144,13 +148,13 @@ module lid_solid() {
 
     rotate_extrude(convexity = 4)
         polygon(concat(
-            [[0, 0], [0, top_thickness],
-             [outer_r - top_chamfer, top_thickness],
+            [[0, 0], [inner_r, 0]],
+            reversed(inner_bottom),
+            reversed(outer_bottom),
+            [[outer_r, 0],
              [outer_r, top_thickness - top_chamfer],
-             [outer_r, 0]],
-            outer_bottom,
-            inner_bottom,
-            [[inner_r, 0]]
+             [outer_r - top_chamfer, top_thickness],
+             [0, top_thickness]]
         ));
 }
 
@@ -170,6 +174,28 @@ module lettering_solid() {
                 lettering_2d();
 }
 
+module engraving_solid() {
+    if (longest_line() > 0 && text_depth > 0)
+        translate([0, 0, top_thickness - text_depth])
+            linear_extrude(height = text_depth + eps)
+                lettering_2d();
+}
+
+module lid_component() {
+    color(lid_preview_color)
+        if (longest_line() > 0 && text_depth > 0)
+            difference() {
+                lid_solid();
+                engraving_solid();
+            }
+        else
+            lid_solid();
+}
+
+module lettering_component() {
+    color(lettering_preview_color) lettering_solid();
+}
+
 module selected_model() {
     if (model_view == "2D Sketch")
         projection(cut = true)
@@ -179,18 +205,14 @@ module selected_model() {
             else
                 translate([0, top_thickness, 0])
                     rotate([90, 0, 0]) lid_solid();
-    else if (model_view == "Single Part")
-        union() {
-            lid_solid();
-            lettering_solid();
-        }
+    else if (model_view == "Single Part") {
+        lid_component();
+        lettering_component();
+    }
     else if (model_view == "Lid Only")
-        difference() {
-            lid_solid();
-            lettering_solid();
-        }
+        lid_component();
     else
-        lettering_solid();
+        lettering_component();
 }
 
 // Put the chosen face on Z=0 while keeping lid and lettering mutually registered.
