@@ -1,3 +1,14 @@
+/*
+    ParametricRoundLid.scad
+    by Scott Gilbertson
+    https://github.com/sgilbertson/scotts_OpenSCAD_models/tree/main/household/parametricRoundLid
+
+    This model can be customized to produce lids for a variety of round containers.
+    A lip can be included with a half-round bead that snaps over the lip of the container.
+    Text can be added. It can be flush, recessed or proud. If desired a second material can
+    be used for the text, so that it is a different color than the lid.
+*/
+
 /* [Matrix View Controls] */
 
 // Select the visual layout or the component to export.
@@ -22,7 +33,7 @@ top_chamfer = 1;
 
 /* [Lettering] */
 
-// One quoted string per line. Unicode BMP symbols can be entered directly; for example, ["☕"] or ["COFFEE", "☕"]. The selected font must contain them.
+// One quoted string per line. Unicode BMP symbols can be entered or pasted directly; for example, ["☕"] or ["COFFEE", "☕"]. The selected font must contain them.
 text_lines = [""];
 // Typeface used for the lid text.
 text_typeface = "Liberation Sans"; // [Liberation Sans, Liberation Serif, Liberation Mono, Custom]
