@@ -82,7 +82,61 @@ My inspiration for this project was that I wanted a container for silica gel des
 
 The included `PencilCupLid75mm.3mf`, lid STL, and lettering STL are an example of this application, not a universal fit.
 
-<!-- Still to do: I will add the detailed pencil-cup measurement, customization, slicing, filling, and assembly walkthrough here. -->
+My process is documented here as an example of how to use the model.
+
+The rim of the pencil cup is wider than the body, and slopes inward. I wanted the lid to snap over the wider part.
+
+![close up of pencil cup rim](images/RolledLipOnPencilCup.jpg)
+
+To obtain the diameters of the cup and the rim, I wrapped a piece of paper around the cup and made a mark corresponding to the circumference. Dividing that number by Pi will give us the diameter.
+
+![how I marked the circumference](images/MarkingCircumference.jpg)
+
+For the rim, the circumference was 235 mm, almost exactly. The main cylindrical section was almost exactly 230mm. These things seem to be sized by circumference rather than by diameter.
+
+![circumference measurement](images/MeasureCircumference.jpg)
+
+Those measurements work out to diameters of 74.8 mm and 73.2 mm, respectively. I was using PETG, which has a bit of give to it compared with PLA, but it's not as flexible as TPU. Here are the settings I used.
+
+| Setting | Value used for the ~75mm pencil cup|
+|---|---|
+| print orientation | Top Down |
+| lid diameter | 76 |
+| top thickness | 2 |
+| lip thickness | 2 |
+| lip height | 7 |
+| bead diameter | 2 |
+| top chamfer | 1 |
+| text lines | `["SILICA", "GEL"]` |
+| text typeface | Liberation Sans |
+| text style | Bold |
+| text fit percent | 85 |
+| text depth | 0.1 |
+| text height | 1.3 |
+| line spacing | 1.15 |
+| facet count | 128 |
+
+The inside diameter of the bead on the lip is 76-2=74 mm, which is 0.8mm less than the diameter of the rim on the cup and 0.8mm more than the diameter of the main cylinder of the cup. The main diameter is 76mm, which is a bit loose over the 74.8 mm rim. I don't claim any science was involved -- I just guessed at the appropriate numbers.
+
+Here's the finished product. To my surprise, my first try worked. It's printed in clear/translucent PETG with black PETG lettering, using the two heads on my Bambu X2D printer.
+
+![Cup with silica gel loaded](images/SilicaGelLoaded.jpg)
+
+## Another example: simple lid with custom typeface
+
+My wife had a decorative jar that she uses to store small binder clips. I printed the lid in white PLA with purple raised lettering. There's no bead, so it just slides over the top, just slightly snug.
+
+![Jar lid using custom font](images/BinderClipsContainer.jpg)
+
+For the text, I downloaded the "Crafty Girls" font from [from fonts.google.com](https://fonts.google.com/specimen/Crafty+Girls), and installed it on my PC. I entered "Crafty Girls" as a custom typeface. That works if you're running OpenSCAD locally.
+
+On the MakerLab site, when customizing the design, you can obtain a list of available fonts as follows (unless they've changed the interface by the time you read these instructions):
+
+- Click the "Code" button to view the OpenSCAD code
+- At the bottom, beside the "Save" button, click the other button with an icon that looks like a magnifying glass and a letter T.
+- A list of fonts appears. You can copy a font name to the clipboard.
+
+I've written the script so that you enter the typeface name and select the weight, so you need to omit that. For example, the dialog above gives you "Averia Serif Libre:style=Regular", but you need enter just "Averia Serif Libre" in the custom font customization field.
 
 ## Other possible uses
 
