@@ -32,10 +32,10 @@ custom_typeface = "";
 text_style = "Bold"; // [Normal, Bold, Italic, Bold Italic]
 // Maximum diameter occupied by the text, as a percentage of lid_diameter.
 text_fit_percent = 85;
-// Engraving/inlay depth below the top surface (mm).
+// Engraving/inlay depth below the top surface; limited to top_thickness (mm).
 text_depth = 0; // [0:0.1:10]
-// Height of lettering above the top surface (mm).
-text_height = 0.6;
+// Lettering height relative to the top: positive is raised, 0 is flush, and negative is recessed. Its magnitude below zero cannot exceed text_depth.
+text_height = 0.6; // [-10:0.1:10]
 // Extra spacing between lines, as a multiple of the calculated font size.
 line_spacing = 1.15;
 
@@ -48,6 +48,7 @@ facet_count = 128;
 
 $fn = $preview ? min(facet_count, 72) : facet_count;
 eps = 0.01;
+effective_text_depth = min(text_depth, top_thickness);
 lid_preview_color = [0.95, 0.72, 0.08];
 lettering_preview_color = [0.15, 0.38, 0.85];
 
@@ -64,9 +65,9 @@ assert(top_chamfer >= 0 && top_chamfer < top_thickness &&
        "top_chamfer must fit within both the top and lip");
 assert(text_fit_percent > 0 && text_fit_percent <= 100,
        "text_fit_percent must be in the range 0..100");
-assert(text_depth >= 0 && text_depth <= top_thickness,
-       "text_depth must not exceed top_thickness");
-assert(text_height >= 0, "text_height cannot be negative");
+assert(text_depth >= 0, "text_depth cannot be negative");
+assert(text_height >= -effective_text_depth,
+       "recessed text_height cannot be deeper than the effective text depth");
 assert(print_orientation == "Top Up" || print_orientation == "Top Down",
        "Unknown print_orientation");
 assert(model_view == "2D Sketch" || model_view == "Single Part" ||
@@ -176,16 +177,16 @@ module lettering_2d() {
 }
 
 module lettering_solid() {
-    if (longest_line() > 0 && text_depth + text_height > 0)
-        translate([0, 0, top_thickness - text_depth])
-            linear_extrude(height = text_depth + text_height)
+    if (longest_line() > 0 && effective_text_depth + text_height > 0)
+        translate([0, 0, top_thickness - effective_text_depth])
+            linear_extrude(height = effective_text_depth + text_height)
                 lettering_2d();
 }
 
 module engraving_solid() {
-    if (longest_line() > 0 && text_depth > 0)
-        translate([0, 0, top_thickness - text_depth])
-            linear_extrude(height = text_depth + eps)
+    if (longest_line() > 0 && effective_text_depth > 0)
+        translate([0, 0, top_thickness - effective_text_depth])
+            linear_extrude(height = effective_text_depth + eps)
                 lettering_2d();
 }
 
@@ -198,7 +199,7 @@ module engraved_lid() {
 
 module lid_component() {
     color(lid_preview_color)
-        if (longest_line() > 0 && text_depth > 0) {
+        if (longest_line() > 0 && effective_text_depth > 0) {
             // OpenCSG can hide the minuend when the colored inlay overlaps its
             // cutter. Resolve this one boolean for reliable F5 previews.
             if ($preview)
@@ -239,7 +240,10 @@ if (model_view == "2D Sketch")
 else if (print_orientation == "Top Up")
     translate([0, 0, lip_height]) selected_model();
 else
-    translate([0, 0, top_thickness +
-        ((model_view == "Single Part" || model_view == "Lettering Only") &&
-         longest_line() > 0 ? text_height : 0)])
+    translate([0, 0,
+        model_view == "Lettering Only" && longest_line() > 0
+            ? top_thickness + text_height
+            : top_thickness +
+                (model_view == "Single Part" && longest_line() > 0
+                    ? max(0, text_height) : 0)])
         rotate([180, 0, 0]) selected_model();
