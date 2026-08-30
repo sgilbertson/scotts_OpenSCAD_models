@@ -22,11 +22,11 @@ top_chamfer = 1;
 
 /* [Lettering] */
 
-// One quoted string per line; use ["FIRST LINE", "SECOND LINE"] for newlines.
+// One quoted string per line. Unicode BMP symbols can be entered directly; for example, ["☕"] or ["COFFEE", "☕"]. The selected font must contain them.
 text_lines = [""];
 // Typeface used for the lid text.
 text_typeface = "Liberation Sans"; // [Liberation Sans, Liberation Serif, Liberation Mono, Custom]
-// Installed font family name used when text_typeface is Custom.
+// Installed font family name used when text typeface is Custom.
 custom_typeface = "";
 // Typeface style. Unsupported styles fall back to the closest installed style.
 text_style = "Bold"; // [Normal, Bold, Italic, Bold Italic]
@@ -90,6 +90,10 @@ function longest_line(i = 0, best = 0) =
     i >= len(text_lines) ? best : longest_line(i + 1, max(best, len(text_lines[i])));
 function is_in(c, chars) = len(search(c, chars)) > 0;
 function glyph_advance(c) =
+    // Combining marks occupy no additional horizontal advance. Other Unicode
+    // glyphs are treated as wide symbols so they remain inside the text circle.
+    ord(c) >= 768 && ord(c) <= 879 ? 0 :
+    ord(c) > 127 ? 1.10 :
     is_in(c, " !'(),.:;I[]`ijl|") ? 0.30 :
     is_in(c, "frt") ? 0.40 :
     is_in(c, "mw") ? 0.82 :
