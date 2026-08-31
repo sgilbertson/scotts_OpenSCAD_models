@@ -150,15 +150,19 @@ font_size = text_zone / 2 / max(0.01, largest_text_radius()) / 1.12;
 function reversed(values) =
     [for (i = [len(values) - 1 : -1 : 0]) values[i]];
 
-// Build the complete cross-section as one polygon. Besides being fast, this avoids
-// coincident surfaces that can make the F5 preview look hollow or striped.
+// Build the complete cross-section as one polygon, then rotate it around the Y-axis.
+//  Besides being fast, this method avoids coincident surfaces that can make the
+// F5 preview look hollow or striped.
 module lid_solid() {
     round_r = min(lip_thickness / 2, lip_height, 1);
     rounded_bottom = print_orientation == "Top Down";
 
+    // In the top-down orientation, round off the lip.
     // In the top-up orientation, use a 45-degree (one-eighth circle) arc
     // tangent to each vertical wall. A one-third radial span on both sides
-    // leaves the middle third of the lip flat on the build plate.
+    // leaves the middle third of the lip flat on the build plate. That way
+    // we should have decent adhesion and no supports are required at the rim
+    // (although supports are required for the main underside of the lid)
     desired_arc_span = lip_thickness / 3;
     bottom_arc_r = min(desired_arc_span / (1 - cos(45)),
                        lip_height / sin(45));
@@ -266,6 +270,8 @@ module selected_model() {
 }
 
 // Put the chosen face on Z=0 while keeping lid and lettering mutually registered.
+// That way the two components can be imported as a single two-material object
+// in Bambu Studio.
 if (model_view == "2D Sketch")
     selected_model();
 else if (print_orientation == "Top Up")
