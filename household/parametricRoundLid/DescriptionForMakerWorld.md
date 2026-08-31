@@ -33,19 +33,20 @@ The model includes validation for dimensions that cannot produce workable geomet
 
 ## Text and symbols
 
-Set `text_lines` to one or more quoted strings. For example:
+Enter up to five lines using **text line 1** through **text line 5**. Blank lines are omitted automatically. Unicode BMP symbols can be entered or pasted directly. For example:
 
 ```scad
-text_lines = ["COFFEE"];
-text_lines = ["SILICA", "GEL"];
-text_lines = ["COFFEE", "☕"];
+text_line_1 = "COFFEE";
+text_line_1 = "SILICA";
+text_line_2 = "GEL";
+text_line_2 = "☕";
 ```
 
 The three Liberation font families are included as portable choices because they are commonly available with OpenSCAD. Select **Custom** to enter another installed font family. A Unicode symbol will only render if the selected font contains that glyph.
 
 ![Lid with coffee cup character from DejaVu Sans font](images/LidWithCoffeeCupCharacter.png)
 
-*Lid with coffee cup character from DejaVu Sans font (text_lines = ["☕"])*~
+*Lid with coffee cup character from DejaVu Sans font (`text_line_1 = "☕"`)*~
 
 On MakerWorld, the custom typeface field provides a searchable, filterable list of the available fonts.
 
@@ -117,7 +118,8 @@ Those measurements work out to diameters of 74.8 mm and 73.2 mm, respectively. I
 | lip height | 7 |
 | bead diameter | 2 |
 | top chamfer | 1 |
-| text lines | `["SILICA", "GEL"]` |
+| text line 1 | SILICA |
+| text line 2 | GEL |
 | text typeface | Liberation Sans |
 | text style | Bold |
 | text fit percent | 85 |

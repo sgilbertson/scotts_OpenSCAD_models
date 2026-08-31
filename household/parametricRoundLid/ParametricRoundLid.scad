@@ -33,8 +33,16 @@ top_chamfer = 1;
 
 /* [Lettering] */
 
-// One quoted string per line. Unicode BMP symbols can be entered or pasted directly; for example, ["☕"] or ["COFFEE", "☕"]. The selected font must contain them.
-text_lines = [""];
+// First line of text. Unicode BMP symbols can be entered or pasted directly; the selected font must contain them.
+text_line_1 = "";
+// Optional second line of text.
+text_line_2 = "";
+// Optional third line of text.
+text_line_3 = "";
+// Optional fourth line of text.
+text_line_4 = "";
+// Optional fifth line of text.
+text_line_5 = "";
 // Typeface used for the lid text.
 text_typeface = "Liberation Sans"; // [Liberation Sans, Liberation Serif, Liberation Mono, Custom]
 // Installed font family name, or complete font name including :style=..., used when text typeface is Custom.
@@ -62,6 +70,10 @@ eps = 0.01;
 effective_text_depth = min(text_depth, top_thickness);
 lid_preview_color = [0.95, 0.72, 0.08];
 lettering_preview_color = [0.15, 0.38, 0.85];
+entered_text_lines = [text_line_1, text_line_2, text_line_3, text_line_4,
+                      text_line_5];
+nonempty_text_lines = [for (line = entered_text_lines) if (len(line) > 0) line];
+text_lines = len(nonempty_text_lines) > 0 ? nonempty_text_lines : [""];
 
 assert(lid_diameter > 0, "lid_diameter must be positive");
 assert(top_thickness > 0, "top_thickness must be positive");
