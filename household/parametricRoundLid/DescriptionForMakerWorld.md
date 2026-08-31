@@ -47,13 +47,9 @@ The three Liberation font families are included as portable choices because they
 
 *Lid with coffee cup character from DejaVu Sans font (text_lines = ["☕"])*~
 
-When customizing the design, you can obtain a list of available fonts as follows (unless they've changed the interface by the time you read these instructions):
+On MakerWorld, the custom typeface field provides a searchable, filterable list of the available fonts.
 
-- Click the "Code" button to view the OpenSCAD code
-- At the bottom, beside the "Save" button, click the other button with an icon that looks like a magnifying glass and a letter T.
-- A list of fonts appears. You can copy a font name to the clipboard.
-
-You can enter just the family name in the custom typeface field and select its style separately. For example, for `Averia Serif Libre:style=Regular`, enter `Averia Serif Libre` and select **Normal**. Alternatively, paste the entire font name, including its `:style=...` suffix, and select **(none)** so that the script does not add another style suffix. A font name without a style suffix, such as `AR One Sans`, also works with **(none)**.
+If you're running OpenSCAD locally (as I do, when testing), custom typeface is just a text field. You can select a family name and choose its style separately. Alternatively, select a complete font name such as `Averia Serif Libre:style=Regular`; its included style takes precedence over the separate style setting. A font name without a style suffix, such as `AR One Sans`, can be used with **(none)** to prevent the script from adding a suffix.
 
 Lettering can be configured in several ways:
 

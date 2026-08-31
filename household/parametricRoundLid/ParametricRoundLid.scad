@@ -38,7 +38,7 @@ text_lines = [""];
 // Typeface used for the lid text.
 text_typeface = "Liberation Sans"; // [Liberation Sans, Liberation Serif, Liberation Mono, Custom]
 // Installed font family name, or complete font name including :style=..., used when text typeface is Custom.
-custom_typeface = "";
+custom_typeface = ""; // font
 // Typeface style. Select (none) when the custom typeface already includes its style.
 text_style = "Bold"; // [(none), Thin, Thin Italic, ExtraLight, ExtraLight Italic, Light, Light Italic, Normal, Italic, Medium, Medium Italic, SemiBold, SemiBold Italic, Bold, Bold Italic, ExtraBold, ExtraBold Italic, Black, Black Italic]
 // Maximum diameter occupied by the text, as a percentage of lid_diameter.
@@ -91,7 +91,16 @@ bead_r = bead_diameter / 2;
 line_count = max(1, len(text_lines));
 font_style = text_style == "Normal" ? "Regular" : text_style;
 selected_typeface = text_typeface == "Custom" ? custom_typeface : text_typeface;
-text_font = text_style == "(none)"
+function starts_with_at(value, term, offset, i = 0) =
+    i >= len(term) ? true :
+    offset + i >= len(value) ? false :
+    value[offset + i] == term[i] &&
+        starts_with_at(value, term, offset, i + 1);
+function contains(value, term, offset = 0) =
+    offset + len(term) > len(value) ? false :
+    starts_with_at(value, term, offset) ? true :
+    contains(value, term, offset + 1);
+text_font = text_style == "(none)" || contains(selected_typeface, ":style=")
     ? selected_typeface
     : str(selected_typeface, ":style=", font_style);
 
