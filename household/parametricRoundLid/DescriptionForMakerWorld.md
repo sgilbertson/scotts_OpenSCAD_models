@@ -1,6 +1,8 @@
 # Parametric Round Snap-On Lid with Optional Text
 
-Create a custom round lid for a coffee can, tin, mug, pencil cup, storage container, or other cylindrical object. Enter the container diameter and the desired lid dimensions, then export a lid sized for your particular application.
+This model creates a custom round lid for a coffee can, tin, mug, pencil cup, storage container, or other cylindrical object. Enter the container diameter and the desired lid dimensions, then export a lid sized for your particular application.
+
+You can optionally add text, which can be recessed, flush or proud, and which can optionally be printed with a different filament, normally of a different color.
 
 The lid has an outer skirt and an optional half-round retaining bead on its inside edge. The bead is intended to pass over a rolled rim or similar feature and help the lid snap into place. Because printers, materials, and containers vary, expect to make a small test print or adjust the diameter before printing a large final lid.
 
@@ -25,7 +27,7 @@ The model includes validation for dimensions that cannot produce workable geomet
 
 ![Cross-section of the parametric lid and retaining bead](images/RoundLidCrossSection.svg)
 
-*The 2D Sketch view shows the revolved cross-section of the lid, lip, and retaining bead.*
+*Cross-section illustrating how each dimension parameter is used*
 
 ## Text and symbols
 
@@ -38,6 +40,14 @@ text_lines = ["COFFEE", "☕"];
 ```
 
 The three Liberation font families are included as portable choices because they are commonly available with OpenSCAD. Select **Custom** to enter another installed font family. A Unicode symbol will only render if the selected font contains that glyph.
+
+When customizing the design, you can obtain a list of available fonts as follows (unless they've changed the interface by the time you read these instructions):
+
+- Click the "Code" button to view the OpenSCAD code
+- At the bottom, beside the "Save" button, click the other button with an icon that looks like a magnifying glass and a letter T.
+- A list of fonts appears. You can copy a font name to the clipboard.
+
+You can enter just the family name in the custom typeface field and select its style separately. For example, for `Averia Serif Libre:style=Regular`, enter `Averia Serif Libre` and select **Normal**. Alternatively, paste the entire font name, including its `:style=...` suffix, and select **(none)** so that the script does not add another style suffix. A font name without a style suffix, such as `AR One Sans`, also works with **(none)**.
 
 Lettering can be configured in several ways:
 
@@ -129,14 +139,6 @@ My wife had a decorative jar that she uses to store small binder clips. I printe
 ![Jar lid using custom font](images/BinderClipsContainer.jpg)
 
 For the text, I downloaded the "Crafty Girls" font from [from fonts.google.com](https://fonts.google.com/specimen/Crafty+Girls), and installed it on my PC. I entered "Crafty Girls" as a custom typeface. That works if you're running OpenSCAD locally.
-
-On the MakerLab site, when customizing the design, you can obtain a list of available fonts as follows (unless they've changed the interface by the time you read these instructions):
-
-- Click the "Code" button to view the OpenSCAD code
-- At the bottom, beside the "Save" button, click the other button with an icon that looks like a magnifying glass and a letter T.
-- A list of fonts appears. You can copy a font name to the clipboard.
-
-I've written the script so that you enter the typeface name and select the weight, so you need to omit that. For example, the dialog above gives you "Averia Serif Libre:style=Regular", but you need enter just "Averia Serif Libre" in the custom font customization field.
 
 ## Other possible uses
 
