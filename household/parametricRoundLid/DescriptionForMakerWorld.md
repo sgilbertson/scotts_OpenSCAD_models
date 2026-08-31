@@ -10,17 +10,19 @@ The lid has an outer skirt and an optional half-round retaining bead on its insi
 
 `ParametricRoundLid.scad` lets you customize:
 
-- Lid diameter, measured without the outer lip
-- Top thickness
-- Outer lip thickness and height
-- Diameter of the optional half-round retaining bead
-- Chamfer around the upper edge
-- Top-up or top-down print orientation
-- Single-line or multiline text
-- Typeface, style, and a custom installed font
-- Text size as a percentage of the usable lid diameter
-- Raised, flush, recessed, or full-depth lettering
 - 2D sketch, complete model, lid-only, and lettering-only views
+- Top-up or top-down print orientation
+- Dimensions:
+    - Lid diameter, measured without the outer lip
+    - Top thickness
+    - Outer lip thickness and height
+    - Diameter of the optional half-round retaining bead
+    - Chamfer around the upper edge
+- Lettering (optional)
+    - Single-line or multiline text
+    - Typeface, style, and a custom installed font
+    - Text size as a percentage of the usable lid diameter
+    - Raised, flush, recessed, or full-depth lettering
 - Preview/export facet count (smoothness of circular features)
 
 The model includes validation for dimensions that cannot produce workable geometry. Text is automatically scaled to remain within the selected circular area, including multiline labels and Unicode symbols supported by the selected font.
@@ -40,6 +42,10 @@ text_lines = ["COFFEE", "☕"];
 ```
 
 The three Liberation font families are included as portable choices because they are commonly available with OpenSCAD. Select **Custom** to enter another installed font family. A Unicode symbol will only render if the selected font contains that glyph.
+
+![Lid with coffee cup character from DejaVu Sans font](images/LidWithCoffeeCupCharacter.png)
+
+*Lid with coffee cup character from DejaVu Sans font (text_lines = ["☕"])*~
 
 When customizing the design, you can obtain a list of available fonts as follows (unless they've changed the interface by the time you read these instructions):
 
@@ -88,11 +94,9 @@ The **Single Part** view previews the lid and lettering together in different co
 
 ## Example use case: mesh pencil-cup desiccant container
 
-My inspiration for this project was that I wanted a container for silica gel desiccant. It seemed to me that a mesh pencil cup would allow plenty of air flow while properly retaining the beads. It just needed a lid, and as always I tried to make my design applicable to other use-cases.
+My inspiration for this project was that I wanted a container for silica gel desiccant. It seemed to me that a mesh pencil cup would allow plenty of air flow while properly retaining the beads. It just needed a lid, and as usual I tried to make my design applicable to other use-cases.
 
-The included `PencilCupLid75mm.3mf`, lid STL, and lettering STL are an example of this application, not a universal fit.
-
-My process is documented here as an example of how to use the model.
+My process is documented here as an example of how to use the model. The included `PencilCupLid75mm.3mf`, lid STL, and lettering STL are an example of this application, not a universal fit.
 
 The rim of the pencil cup is wider than the body, and slopes inward. I wanted the lid to snap over the wider part.
 
@@ -128,7 +132,7 @@ Those measurements work out to diameters of 74.8 mm and 73.2 mm, respectively. I
 
 The inside diameter of the bead on the lip is 76-2=74 mm, which is 0.8mm less than the diameter of the rim on the cup and 0.8mm more than the diameter of the main cylinder of the cup. The main diameter is 76mm, which is a bit loose over the 74.8 mm rim. I don't claim any science was involved -- I just guessed at the appropriate numbers.
 
-Here's the finished product. To my surprise, my first try worked. It's printed in clear/translucent PETG with black PETG lettering, using the two heads on my Bambu X2D printer.
+Here's the finished product, loaded with fresh silica gel. To my surprise, it fit very nicely. I had expected this to be a test run before tweaking the dimensions. It's printed in translucent PETG with black PETG lettering, using the two heads on my Bambu X2D printer.
 
 ![Cup with silica gel loaded](images/SilicaGelLoaded.jpg)
 
@@ -146,7 +150,6 @@ For the text, I downloaded the "Crafty Girls" font from [from fonts.google.com](
 - Covers for mugs or cylindrical storage cups
 - Labelled workshop and craft-storage containers
 - Dust covers for open-ended round objects
-- Ventilated desiccant holders
 - Colour-coded or symbol-labelled organization systems
 
 ## License & acknowledgments
