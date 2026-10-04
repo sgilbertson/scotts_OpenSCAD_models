@@ -15,8 +15,8 @@ socket_diameter = 11.5;
 socket_depth    = 27.0;
 
 // Main body of stem.  Slight interference fit for TPU.
-stem_diameter = 11.6;
-stem_length   = 25.5;
+stem_diameter = 10.6;
+stem_length   = 24;
 
 // Axial hole makes the stem easier to compress.
 // Set to 0 for a solid stem.
@@ -34,13 +34,13 @@ rib_count = 4;
 // Maximum diameter at each rib.
 // This is probably the most useful dimension to tune after
 // trying the first print.
-rib_diameter = 12.1;
+rib_diameter = 11.1;
 
 // Axial height of each rib
 rib_height = 1.4;
 
 // Distance between rib centers
-rib_spacing = 4.5;
+rib_spacing = 4;
 
 // Distance from shoulder to center of first rib
 first_rib_height = 5.0;
