@@ -11,30 +11,32 @@ $fn = 96;
 // ---------- Socket / stem ----------
 
 // Measured chair socket
-socket_diameter = 11.5;
+socket_diameter = 11.0;
 socket_depth    = 27.0;
 
-// Main body of stem.  Slight interference fit for TPU.
-stem_diameter = 10.6;
-stem_length   = 24;
+// Clearance between the bottom of the socket and the end of the stem.
+stem_length_clearance = 3;
+
+// Total reduction in diameter from the socket to the stem.
+stem_diameter_reduction = 0.4;
 
 // Axial hole makes the stem easier to compress.
 // Set to 0 for a solid stem.
 stem_hole_diameter = 4.5;
 
-// Lead-in at top of stem
-lead_in_length   = 2.0;
-lead_in_diameter = 9.5;
+// Lead-in at top of stem. The reduction is relative to the stem diameter.
+lead_in_length             = 2.0;
+lead_in_diameter_reduction = 1.1;
 
 
 // ---------- Retaining ribs ----------
 
 rib_count = 4;
 
-// Maximum diameter at each rib.
+// Radial distance each rib protrudes beyond the stem.
 // This is probably the most useful dimension to tune after
 // trying the first print.
-rib_diameter = 11.1;
+rib_protrusion = 0.25;
 
 // Axial height of each rib
 rib_height = 1.4;
@@ -65,6 +67,14 @@ shoulder_diameter = 22;
 
 // Round-over approximation at bottom edge
 bottom_radius = 2.0;
+
+
+/* [Hidden] */
+
+stem_length      = socket_depth - stem_length_clearance;
+stem_diameter    = socket_diameter - stem_diameter_reduction;
+lead_in_diameter = stem_diameter - lead_in_diameter_reduction;
+rib_diameter     = stem_diameter + 2 * rib_protrusion;
 
 
 // ---------- Model ----------
