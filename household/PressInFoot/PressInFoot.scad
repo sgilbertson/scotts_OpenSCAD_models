@@ -43,7 +43,7 @@ rib_height = 1.4;
 // Axial distance between the centers of adjacent retaining ribs.
 rib_spacing = 4;
 
-// Axial distance from the top of the foot to the center of the first rib.
+// Axial distance from the central shoulder surface to the center of the first rib.
 first_rib_height = 5.0;
 
 
@@ -75,6 +75,7 @@ rib_diameter     = stem_diameter + 2 * rib_protrusion;
 outer_top_height = foot_height - max(shoulder_height, 0);
 center_top_height = foot_height + min(shoulder_height, 0);
 stem_base_extension = max(-shoulder_height, 0);
+shoulder_reference_offset = center_top_height - foot_height;
 
 // Number of facets used for curved surfaces.
 $fn = 96;
@@ -101,7 +102,7 @@ module validate_parameters()
     assert(rib_count == 0 || rib_height > 0, "rib_height must be greater than 0 when ribs are enabled");
     assert(rib_count <= 1 || rib_spacing > 0, "rib_spacing must be greater than 0 when using multiple ribs");
     assert(rib_count == 0 || first_rib_height >= rib_height/2, "the first rib must not extend below the stem");
-    assert(rib_count == 0 || first_rib_height + (rib_count-1)*rib_spacing + rib_height/2 <= stem_length-lead_in_length, "the last rib must end before the tapered lead-in");
+    assert(rib_count == 0 || shoulder_reference_offset + first_rib_height + (rib_count-1)*rib_spacing + rib_height/2 <= stem_length-lead_in_length, "the last rib must end before the tapered lead-in");
 
     assert(foot_diameter > 0, "foot_diameter must be greater than 0");
     assert(foot_height > 0, "foot_height must be greater than 0");
@@ -192,7 +193,7 @@ module stem()
             if (rib_count > 0)
                 for (i=[0:rib_count-1])
                     retaining_rib(
-                        first_rib_height + i*rib_spacing
+                        shoulder_reference_offset + first_rib_height + i*rib_spacing
                     );
         }
 
