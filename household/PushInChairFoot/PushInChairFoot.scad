@@ -1,80 +1,86 @@
+// Parametric press-in foot for furniture, equipment, enclosures, and
+// other objects with a round mounting hole.
 //
-// Press-in chair foot
-// Intended for 95A TPU
-//
-// Print with foot on build plate and stem pointing upward.
-//
-// Initial design by ChatGPT per specification from Scott Gilbertson
+// Designed for flexible filament such as TPU so the stem and retaining
+// ribs can compress during insertion and grip the mounting hole.
+// Print with the foot on the build plate and the stem pointing upward.
 
-$fn = 96;
+/* [Mounting Hole and Stem] */
 
-// ---------- Socket / stem ----------
-
-// Measured chair socket
+// Inside diameter of the round mounting hole.
 socket_diameter = 11.0;
+
+// Usable depth of the mounting hole, measured from its opening.
 socket_depth    = 27.0;
 
-// Clearance between the bottom of the socket and the end of the stem.
+// Axial gap between the end of the stem and the bottom of the mounting hole.
+// Increase this if the hole depth is uncertain or its bottom is obstructed.
 stem_length_clearance = 3;
 
-// Total reduction in diameter from the socket to the stem.
+// Total diametral clearance between the mounting hole and the plain stem.
+// Decrease for a tighter stem fit; this is a diameter, not a per-side value.
 stem_diameter_reduction = 0.4;
 
-// Axial hole makes the stem easier to compress.
-// Set to 0 for a solid stem.
+// Diameter of the axial compliance hole through the stem.
+// Larger values make the stem easier to compress; set to 0 for a solid stem.
 stem_hole_diameter = 4.5;
 
-// Lead-in at top of stem. The reduction is relative to the stem diameter.
+// Axial length of the tapered insertion tip.
 lead_in_length             = 2.0;
+
+// Total diameter reduction at the end of the insertion tip, relative to the
+// plain stem diameter. Increase this for an easier-to-start insertion.
 lead_in_diameter_reduction = 1.1;
 
 
-// ---------- Retaining ribs ----------
+/* [Retaining Ribs] */
 
+// Number of retaining ribs distributed along the stem.
 rib_count = 4;
 
-// Radial distance each rib protrudes beyond the stem.
-// This is probably the most useful dimension to tune after
-// trying the first print.
+// Radial distance each retaining rib protrudes beyond the plain stem.
+// Increase for more grip or decrease if insertion is too difficult.
 rib_protrusion = 0.25;
 
-// Axial height of each rib
+// Axial height of each retaining rib.
 rib_height = 1.4;
 
-// Distance between rib centers
+// Axial distance between the centers of adjacent retaining ribs.
 rib_spacing = 4;
 
-// Distance from shoulder to center of first rib
+// Axial distance from the top of the foot to the center of the first rib.
 first_rib_height = 5.0;
 
 
-// ---------- Foot ----------
+/* [Foot] */
 
-arm_width = 20;
-
-// Diameter of floor-contacting foot
+// Maximum outside diameter of the foot.
 foot_diameter = 26;
 
-// Overall height of foot below metal arm
+// Overall foot height, from the contact surface to the base of the stem.
 foot_height = 8;
 
-// Thickness of flat shoulder immediately below arm
+// Height of the straight-sided shoulder at the top of the foot.
 shoulder_height = 2.0;
 
-// Diameter of shoulder.
-// Slightly larger than arm width so it cannot enter the socket.
+// Diameter of the shoulder surrounding the mounting-hole opening.
+// Keep this larger than socket_diameter so the foot cannot enter the hole.
 shoulder_diameter = 22;
 
-// Round-over approximation at bottom edge
+// Approximate radius of the rounded lower outside edge.
 bottom_radius = 2.0;
 
 
 /* [Hidden] */
 
+// Dimensions derived from the user-facing fit parameters above.
 stem_length      = socket_depth - stem_length_clearance;
 stem_diameter    = socket_diameter - stem_diameter_reduction;
 lead_in_diameter = stem_diameter - lead_in_diameter_reduction;
 rib_diameter     = stem_diameter + 2 * rib_protrusion;
+
+// Number of facets used for curved surfaces.
+$fn = 96;
 
 
 // ---------- Model ----------
@@ -102,7 +108,7 @@ module rounded_foot()
 module retaining_rib(z)
 {
     // Symmetrical shallow bulge.
-    // The TPU will compress as it enters the socket.
+    // Flexible filament lets the rib compress as it enters the mounting hole.
 
     translate([0,0,z-rib_height/2])
         cylinder(
@@ -160,7 +166,7 @@ module stem()
 }
 
 
-module chair_foot()
+module press_in_foot()
 {
     union()
     {
@@ -172,4 +178,4 @@ module chair_foot()
 }
 
 
-chair_foot();
+press_in_foot();
