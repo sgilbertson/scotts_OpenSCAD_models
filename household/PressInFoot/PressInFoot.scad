@@ -52,10 +52,10 @@ first_rib_height = 5.0;
 // Maximum outside diameter of the foot.
 foot_diameter = 26;
 
-// Overall foot height, from the contact surface to the base of the stem.
+// Distance from the build plate to the mounting-contact surface.
 foot_height = 8;
 
-// Height of the straight-sided shoulder at the top of the foot.
+// Signed center-to-outer height (can be negative to recess the center and create a rim).
 shoulder_height = 2.0;
 
 // Shoulder diameter around the mounting hole; keep it larger than socket_diameter to prevent pull-through.
@@ -72,6 +72,9 @@ stem_length      = socket_depth - stem_length_clearance;
 stem_diameter    = socket_diameter - stem_diameter_reduction;
 lead_in_diameter = stem_diameter - lead_in_diameter_reduction;
 rib_diameter     = stem_diameter + 2 * rib_protrusion;
+outer_top_height = foot_height - max(shoulder_height, 0);
+center_top_height = foot_height + min(shoulder_height, 0);
+stem_base_extension = max(-shoulder_height, 0);
 
 // Number of facets used for curved surfaces.
 $fn = 96;
@@ -102,12 +105,12 @@ module validate_parameters()
 
     assert(foot_diameter > 0, "foot_diameter must be greater than 0");
     assert(foot_height > 0, "foot_height must be greater than 0");
-    assert(shoulder_height >= 0 && shoulder_height < foot_height, "shoulder_height must be non-negative and less than foot_height");
+    assert(abs(shoulder_height) < foot_height, "the absolute value of shoulder_height must be less than foot_height");
     assert(shoulder_diameter > socket_diameter, "shoulder_diameter must be larger than socket_diameter to prevent pull-through");
     assert(shoulder_diameter <= foot_diameter, "shoulder_diameter must not exceed foot_diameter");
     assert(bottom_edge_rounding > 0, "bottom_edge_rounding must be greater than 0");
     assert(bottom_edge_rounding <= foot_diameter/2, "bottom_edge_rounding must not exceed half of foot_diameter");
-    assert(1.25 * bottom_edge_rounding <= foot_height-shoulder_height, "bottom_edge_rounding is too large for the available foot height");
+    assert(1.25 * bottom_edge_rounding <= outer_top_height, "bottom_edge_rounding is too large for the available foot height");
 }
 
 
@@ -128,10 +131,10 @@ module rounded_foot()
             [foot_diameter/2 - bottom_edge_rounding/8,
                 bottom_edge_rounding],
             [foot_diameter/2, 1.25 * bottom_edge_rounding],
-            [foot_diameter/2, foot_height - shoulder_height],
-            [shoulder_diameter/2, foot_height - shoulder_height],
-            [shoulder_diameter/2, foot_height],
-            [0, foot_height]
+            [foot_diameter/2, outer_top_height],
+            [shoulder_diameter/2, outer_top_height],
+            [shoulder_diameter/2, center_top_height],
+            [0, center_top_height]
         ]);
 }
 
@@ -163,6 +166,14 @@ module stem()
     {
         union()
         {
+            // Bridge from a recessed center to the mounting-contact plane.
+            if (stem_base_extension > 0)
+                translate([0,0,-stem_base_extension])
+                    cylinder(
+                        h=stem_base_extension,
+                        d=stem_diameter
+                    );
+
             // Main stem, stopping before the tapered lead-in
             cylinder(
                 h=stem_length-lead_in_length,
@@ -189,9 +200,9 @@ module stem()
         // It stops short of the bottom so the foot remains
         // completely closed against the floor.
         if (stem_hole_diameter > 0)
-            translate([0,0,-0.01])
+            translate([0,0,-stem_base_extension-0.01])
                 cylinder(
-                    h=stem_length+0.02,
+                    h=stem_length+stem_base_extension+0.02,
                     d=stem_hole_diameter
                 );
     }
