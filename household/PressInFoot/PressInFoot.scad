@@ -5,6 +5,15 @@
 // ribs can compress during insertion and grip the mounting hole.
 // Print with the foot on the build plate and the stem pointing upward.
 
+/* [View] */
+
+// Select the printable model or a documented axial cross-section.
+model_view = "3D Model"; // [3D Model, 3D Cutaway, 2D Cross-Section]
+
+// Look straight at the XY plane when displaying the 2D documentation view.
+$vpr = model_view == "2D Cross-Section" ? [0, 0, 0] : $vpr;
+
+
 /* [Mounting Hole and Stem] */
 
 // Inside diameter of the round mounting hole.
@@ -224,4 +233,129 @@ module press_in_foot()
 }
 
 
-press_in_foot();
+// Cut the rotational model through its axis and orient height vertically.
+module axial_cross_section_2d()
+{
+    projection(cut=true)
+        rotate([-90,0,0])
+            press_in_foot();
+}
+
+
+// Remove one half of the model through its axis to expose internal geometry.
+module cutaway_3d()
+{
+    cutaway_extent = 2 * max(foot_diameter, foot_height + stem_length) + 2;
+
+    render(convexity=10)
+        difference() {
+            press_in_foot();
+
+            translate([
+                -cutaway_extent/2,
+                -cutaway_extent,
+                -cutaway_extent/2
+            ])
+                cube([
+                    cutaway_extent,
+                    cutaway_extent,
+                    cutaway_extent
+                ]);
+        }
+}
+
+
+// Draw a two-column record of every user-configurable geometry parameter.
+module parameter_table_2d()
+{
+    settings = [
+        ["socket_diameter", str(socket_diameter, " mm")],
+        ["socket_depth", str(socket_depth, " mm")],
+        ["stem_length_clearance", str(stem_length_clearance, " mm")],
+        ["stem_diameter_reduction", str(stem_diameter_reduction, " mm")],
+        ["stem_hole_diameter", str(stem_hole_diameter, " mm")],
+        ["lead_in_length", str(lead_in_length, " mm")],
+        ["lead_in_diameter_reduction", str(lead_in_diameter_reduction, " mm")],
+        ["rib_count", rib_count],
+        ["rib_protrusion", str(rib_protrusion, " mm")],
+        ["rib_height", str(rib_height, " mm")],
+        ["rib_spacing", str(rib_spacing, " mm")],
+        ["first_rib_height", str(first_rib_height, " mm")],
+        ["foot_diameter", str(foot_diameter, " mm")],
+        ["foot_height", str(foot_height, " mm")],
+        ["shoulder_height", str(shoulder_height, " mm")],
+        ["shoulder_diameter", str(shoulder_diameter, " mm")],
+        ["bottom_edge_rounding", str(bottom_edge_rounding, " mm")]
+    ];
+
+    columns = 2;
+    rows = ceil(len(settings) / columns);
+    table_width = max(foot_diameter, 100);
+    column_width = table_width / columns;
+    row_height = 3.5;
+    header_height = 4.5;
+    table_height = header_height + rows * row_height;
+    table_top = -4;
+    table_bottom = table_top - table_height;
+    line_width = 0.1;
+
+    color("Navy") {
+        // Outer border.
+        translate([-table_width/2, table_bottom])
+            difference() {
+                square([table_width, table_height]);
+                translate([line_width, line_width])
+                    square([
+                        table_width - 2*line_width,
+                        table_height - 2*line_width
+                    ]);
+            }
+
+        // Column divider, row dividers, and heading.
+        translate([-line_width/2, table_bottom])
+            square([line_width, table_height-header_height]);
+
+        for (row = [1:rows])
+            translate([
+                -table_width/2,
+                table_bottom + row*row_height - line_width/2
+            ])
+                square([table_width, line_width]);
+
+        translate([0, table_top-header_height/2])
+            text(
+                "Configured Parameters",
+                size=1.8,
+                halign="center",
+                valign="center"
+            );
+
+        for (row = [0:rows-1], column = [0:columns-1])
+            let(index = row*columns + column)
+                if (index < len(settings))
+                    translate([
+                        -table_width/2 + column*column_width + 1,
+                        table_top - header_height - (row+0.5)*row_height
+                    ])
+                        text(
+                            str(settings[index][0], ": ", settings[index][1]),
+                            size=1.15,
+                            valign="center"
+                        );
+    }
+}
+
+
+module documented_cross_section_2d()
+{
+    color("Goldenrod") axial_cross_section_2d();
+    parameter_table_2d();
+}
+
+
+if (model_view == "2D Cross-Section")
+    documented_cross_section_2d();
+else if (model_view == "3D Cutaway")
+    cutaway_3d();
+else
+    press_in_foot();

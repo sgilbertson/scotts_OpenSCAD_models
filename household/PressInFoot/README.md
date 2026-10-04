@@ -13,3 +13,9 @@ The design is also suitable for furniture, equipment, and custom enclosures.
 For example, mounting holes can be included in a rigid 3D-printed box so that
 separate TPU feet can be pressed into it. Feet can similarly be added to a
 wooden object by drilling appropriately sized holes in its base.
+
+The Customizer defaults to the printable **3D Model**. The **3D Cutaway** view
+removes half of the model to expose its internal geometry. The **2D
+Cross-Section** view shows an axial section with a table of the configured
+parameter values below it, providing a convenient image record of a particular
+configuration.
