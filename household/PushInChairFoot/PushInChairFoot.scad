@@ -67,8 +67,10 @@ shoulder_height = 2.0;
 // Keep this larger than socket_diameter so the foot cannot enter the hole.
 shoulder_diameter = 22;
 
-// Approximate radius of the rounded lower outside edge.
-bottom_radius = 2.0;
+// Radial inset of the flat contact face used to form the rounded bottom edge.
+// Larger values make the contact face narrower and the edge transition taller.
+// The outermost segment starts at a support-free 45-degree angle.
+bottom_edge_rounding = 2.1; // [0.1:0.1:50]
 
 
 /* [Hidden] */
@@ -87,16 +89,29 @@ $fn = 96;
 
 module rounded_foot()
 {
-    // A simple rotational profile gives a rounded lower edge
-    // without Minkowski() making the model unnecessarily slow.
+    // A proportional rotational profile approximates a rounded edge without
+    // Minkowski(). Each outward segment is at least 45 degrees from the build
+    // plate, avoiding the shallow overhang that can weaken the first layers.
+
+    assert(
+        bottom_edge_rounding <= foot_diameter/2,
+        "bottom_edge_rounding must not exceed half of foot_diameter"
+    );
+
+    assert(
+        1.25 * bottom_edge_rounding <= foot_height - shoulder_height,
+        "bottom_edge_rounding is too large for the available foot height"
+    );
 
     rotate_extrude(convexity=10)
         polygon([
             [0, 0],
-            [foot_diameter/2 - bottom_radius, 0],
-            [foot_diameter/2 - bottom_radius/2, 0.3],
-            [foot_diameter/2 - 0.15, bottom_radius],
-            [foot_diameter/2, bottom_radius + 0.5],
+            [foot_diameter/2 - bottom_edge_rounding, 0],
+            [foot_diameter/2 - bottom_edge_rounding/2,
+                bottom_edge_rounding/2],
+            [foot_diameter/2 - bottom_edge_rounding/8,
+                bottom_edge_rounding],
+            [foot_diameter/2, 1.25 * bottom_edge_rounding],
             [foot_diameter/2, foot_height - shoulder_height],
             [shoulder_diameter/2, foot_height - shoulder_height],
             [shoulder_diameter/2, foot_height],
