@@ -10,6 +10,9 @@ t = 3;
 // Height of the side walls above the grid (mm; 0 = no raised walls)
 side_wall_height = 0;
 
+// Thickness of the raised side wall grids (mm), independent of the bottom grid
+side_wall_thickness = 2;
+
 $fn = 50;
 
 // Resolve coplanar Boolean faces before previewing, so F5 matches F6.
@@ -47,17 +50,44 @@ module tray() {
         kletka();
     }
 
-    // Modul: Außenkontur zur Wandstärke
-    // Module: Outer outline defining the wall thickness
+    // Solid 2 mm bottom perimeter and separately sized, perforated side walls.
     contur();
-    module contur() {
+    module perimeter(height, thickness) {
         difference() {
-            // Outer perimeter: grid thickness plus the raised wall height.
             translate([0, -w/2, 0])
-                cube([l, w, t + side_wall_height]);
-            // Inner opening leaves a 2 mm thick perimeter.
-            translate([2, -w/2 + 2, -1])
-                cube([l - 4, w - 4, t + side_wall_height + 2]);
+                cube([l, w, height]);
+            translate([thickness, -w/2 + thickness, -1])
+                cube([l - 2*thickness, w - 2*thickness, height + 2]);
+        }
+    }
+
+    module contur() {
+        perimeter(t, 2);
+        if (side_wall_height > 0) {
+            // Match the floor's 6 x 4 mm pitch and 1.2 mm grid bars.
+            // Keep a solid frame at the top, bottom and corners of each wall.
+            frame = max(2, side_wall_thickness);
+            columns_l = floor((l - 2*frame + 1.2)/6);
+            columns_w = floor((w - 2*frame + 1.2)/6);
+            rows = floor((side_wall_height - 2*frame + 1.2)/4);
+            translate([0, 0, t])
+                difference() {
+                    perimeter(side_wall_height, side_wall_thickness);
+                    if (rows > 0) {
+                        // Openings through the two long walls.
+                        if (columns_l > 0)
+                            for (i = [0 : columns_l - 1], j = [0 : rows - 1],
+                                 y = [-w/2, w/2 - side_wall_thickness])
+                                translate([frame + i*6, y - 0.1, frame + j*4])
+                                    cube([4.8, side_wall_thickness + 0.2, 2.8]);
+                        // Openings through the two end walls.
+                        if (columns_w > 0)
+                            for (i = [0 : columns_w - 1], j = [0 : rows - 1],
+                                 x = [0, l - side_wall_thickness])
+                                translate([x - 0.1, -w/2 + frame + i*6, frame + j*4])
+                                    cube([side_wall_thickness + 0.2, 4.8, 2.8]);
+                    }
+                }
         }
     }
 
