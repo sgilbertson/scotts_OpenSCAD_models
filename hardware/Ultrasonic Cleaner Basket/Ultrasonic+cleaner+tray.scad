@@ -13,6 +13,24 @@ side_wall_height = 0;
 // Thickness of the raised side wall grids (mm), independent of the bottom grid
 side_wall_thickness = 2;
 
+// Vertical distance from the grid bottom to the underside of the hook crossbar (mm)
+hook_depth = 52;
+
+// Inside width of the cleaning tub at the rim, across the tray width (mm)
+tub_inside_width = 90;
+
+// Outside width of the cleaner where the hook legs hang (mm)
+cleaner_outside_width = 105;
+
+// Clearance per side: braces inside the tub and hook legs outside the cleaner (mm)
+hook_fit_clearance = 0.5;
+
+// Clear vertical drop from the crossbar underside to the bottom of the outer leg (mm)
+hook_inside_height = 6;
+
+// Thickness of the hook bars, including their width along the tray length (mm)
+hook_bar_thickness = 3;
+
 $fn = 50;
 
 // Resolve coplanar Boolean faces before previewing, so F5 matches F6.
@@ -20,6 +38,20 @@ $fn = 50;
 render(convexity = 10) tray();
 
 module tray() {
+    // Assume the tub, cleaner and tray are centered on the same width axis.
+    // Uprights are centered on the grid edges, so their outside span is w + b.
+    upright_outside_span = w + hook_bar_thickness;
+    gap_to_tub = (tub_inside_width - upright_outside_span)/2;
+    rim_span = (cleaner_outside_width - tub_inside_width)/2;
+    hook_inside_length = gap_to_tub + rim_span + hook_fit_clearance;
+    brace_run = gap_to_tub - hook_fit_clearance;
+    assert(brace_run >= 0,
+           "Tub must fit the upright outside span plus clearance on both sides.");
+    assert(brace_run <= hook_depth,
+           "Tub is too wide for a 45 degree brace at this hook depth; increase hook_depth.");
+    assert(cleaner_outside_width >= tub_inside_width,
+           "Cleaner outside width must be at least the tub inside width.");
+    assert(hook_fit_clearance >= 0, "Hook fit clearance cannot be negative.");
     // Modul: Gitterstruktur über gesamten Quader
     // Module: Grid structure across the entire rectangular block
     module kletka() {
@@ -91,28 +123,45 @@ module tray() {
         }
     }
 
-    // Hörner an den vier Ecken
-    // Horns at the four corners
-    // Keep the default corner offsets as the tray length and width change.
-    translate([6, -w/2 - 17.5, 0]) rog();
-    translate([l - 10, -w/2 - 17.5, 0]) rog();
-    translate([10, w/2 + 17.5, 0]) rotate([0, 0, 180]) rog();
-    translate([l - 6, w/2 + 17.5, 0]) rotate([0, 0, 180]) rog();
+    // Four corner hangers. Center each upright on the long edge of the grid.
+    hook_reach = hook_inside_length + 2*hook_bar_thickness;
+    hanger_y = w/2 + hook_reach - hook_bar_thickness/2;
+    translate([6, -hanger_y, 0]) rog();
+    translate([l - 6 - hook_bar_thickness, -hanger_y, 0]) rog();
+    translate([6 + hook_bar_thickness, hanger_y, 0]) rotate([0, 0, 180]) rog();
+    translate([l - 6, hanger_y, 0]) rotate([0, 0, 180]) rog();
+
     module rog() {
-        difference() {
-            // Grundblöcke bis 55 mm Höhe
-            // Base blocks up to 55 mm high
-            cube([4, 20, 55]);
-            translate([0, 2, 0]) cube([4, 14, 52]);
-            translate([0, 4, 0]) cube([4, 12, 49]);
-            cube([4,12,46]);
+        b = hook_bar_thickness;
+        assert(b > 0, "Hook bar thickness must be positive.");
+        assert(hook_inside_length > 0, "Hook inside length must be positive.");
+        assert(hook_inside_height > 0 && hook_inside_height < hook_depth,
+               "Hook inside height must be positive and less than hook depth.");
+        // Horizontal crossbar: its underside is exactly hook_depth above Z=0.
+        translate([0, 0, hook_depth])
+            cube([b, hook_reach, b]);
+        // Triangular brace in the Y/Z plane, extruded to the hook bar width.
+        // Equal horizontal run and vertical rise give a 45 degree underside.
+        // Its tip stops short of the tub wall by hook_fit_clearance; the
+        // remaining flat crossbar underside bears on the tub rim at Z=hook_depth.
+        if (brace_run > 0)
+            multmatrix([[0, 0, 1, 0],
+                        [1, 0, 0, 0],
+                        [0, 1, 0, 0],
+                        [0, 0, 0, 1]])
+                linear_extrude(height = b)
+                    polygon([[hook_reach - b, hook_depth - brace_run],
+                             [hook_reach - b, hook_depth],
+                             [hook_reach - b - brace_run, hook_depth]]);
+        // Outer vertical leg; the clear opening ends at its inner face, Y=b.
+        translate([0, 0, hook_depth - hook_inside_height])
+            cube([b, b, hook_inside_height + b]);
+        // Upright with a flared foot, retaining the original 6 mm corner offset.
+        hull() {
+            translate([-6, hook_reach - b, 0])
+                cube([b + 12, b, min(t, hook_depth)]);
+            translate([0, hook_reach - b, hook_depth])
+                cube([b, b, b]);
         }
-        // Abrundung an der Spitze
-        // Rounding at the tip
-        translate([0, 18, 0])
-            hull() {
-                translate([0, 0, 53]) cube([4, 1, 1]);
-                translate([-6, 0, 0]) cube([16, 1, 1]);
-            }
     }
 }
