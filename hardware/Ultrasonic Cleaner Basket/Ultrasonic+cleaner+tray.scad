@@ -1,11 +1,11 @@
-// Länge des Quaders jetzt 180 mm / Length of the rectangular block is now 180 mm
-l = 180;
+// Length of the horizontal rectangular grid
+l = 180; // Länge des Quaders jetzt 180 mm
 
-// Breite des Quaders jetzt 75 mm / Width of the rectangular block is now 75 mm
-w = 75;
+// Width of the horizontal rectangular grid
+w = 75; // Breite des Quaders jetzt 75 mm
 
-// Materialstärke in Z / Material thickness in Z
-t = 2;
+// Height of preimeter / side walls
+t = 2;  // Materialstärke in Z
 
 $fn = 50;
 
