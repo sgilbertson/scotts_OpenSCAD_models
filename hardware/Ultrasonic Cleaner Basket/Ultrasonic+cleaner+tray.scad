@@ -4,8 +4,11 @@ l = 180; // Länge des Quaders jetzt 180 mm
 // Width of the horizontal rectangular grid
 w = 75; // Breite des Quaders jetzt 75 mm
 
-// Height of preimeter / side walls
-t = 2;  // Materialstärke in Z
+// Thickness of the horizontal grid (mm)
+t = 3;
+
+// Height of the side walls above the grid (mm; 0 = no raised walls)
+side_wall_height = 0;
 
 $fn = 50;
 
@@ -25,13 +28,13 @@ module tray() {
             // Vertikale Streben (Abstand 6 mm)
             for (i = [0 : floor(l/6)]) {
                 translate([i*6, -w/2, 0])
-                    cube([1.2, w, 3]);
+                    cube([1.2, w, t + 1]);
             }
 
             // Horizontale Streben (Abstand 4 mm)
             for (j = [0 : floor(w/4)]) {
                 translate([0, j*4 - w/2, 0])
-                    cube([l, 1.2, 3]);
+                    cube([l, 1.2, t + 1]);
             }
         }
     }
@@ -49,12 +52,12 @@ module tray() {
     contur();
     module contur() {
         difference() {
-            // äußere Kontur
+            // Outer perimeter: grid thickness plus the raised wall height.
             translate([0, -w/2, 0])
-                cube([l, w, t]);
-            // innere Kontur (2 mm Wandstärke)
-            translate([2, -w/2 + 2, 0])
-                cube([l - 4, w - 4, t + 1]);
+                cube([l, w, t + side_wall_height]);
+            // Inner opening leaves a 2 mm thick perimeter.
+            translate([2, -w/2 + 2, -1])
+                cube([l - 4, w - 4, t + side_wall_height + 2]);
         }
     }
 
