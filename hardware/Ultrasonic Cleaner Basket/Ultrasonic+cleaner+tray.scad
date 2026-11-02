@@ -55,10 +55,11 @@ module contur() {
 
 // Hörner an den vier Ecken
 // Horns at the four corners
-translate([6, -55, 0]) rog();
-translate([170 , -55, 0]) rog();
-translate([10,  55, 0]) rotate([0, 0, 180]) rog();
-translate([174 ,  55, 0]) rotate([0, 0, 180]) rog();
+// Keep the default corner offsets as the tray length and width change.
+translate([6, -w/2 - 17.5, 0]) rog();
+translate([l - 10, -w/2 - 17.5, 0]) rog();
+translate([10, w/2 + 17.5, 0]) rotate([0, 0, 180]) rog();
+translate([l - 6, w/2 + 17.5, 0]) rotate([0, 0, 180]) rog();
 module rog() {
     difference() {
         // Grundblöcke bis 55 mm Höhe
