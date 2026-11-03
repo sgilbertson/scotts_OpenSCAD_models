@@ -13,6 +13,9 @@ side_wall_height = 0;
 // Thickness of the raised side wall grids (mm), independent of the bottom grid
 side_wall_thickness = 2;
 
+// Maximum clear diamond hole diagonal in the side walls (mm); fitted size may be smaller
+side_wall_hole_size = 4.8;
+
 // Vertical distance from the grid bottom to the underside of the hook crossbar (mm)
 hook_depth = 52;
 
@@ -93,34 +96,54 @@ module tray() {
         }
     }
 
+    // Complete, staggered diamond openings; partial edge cells remain filled.
+    // The 1.2 mm webs are measured perpendicular to the diagonal grid bars.
+    module wall_holes_2d(span, height) {
+        frame = max(2, side_wall_thickness);
+        available_x = span - 2*frame;
+        available_z = height - 2*frame;
+        gap = 1.2*sqrt(2);
+        assert(side_wall_hole_size > 0, "Side wall hole size must be positive.");
+        if (available_x > 0 && available_z > 0) {
+            // Fit whole cells in both directions without enlarging the request.
+            fit_x = (available_x + gap)/ceil((available_x + gap)/(side_wall_hole_size + gap)) - gap;
+            fit_z = (available_z + gap)/ceil((available_z + gap)/(side_wall_hole_size + gap)) - gap;
+            d = min(side_wall_hole_size, fit_x, fit_z);
+            if (d > 0) {
+                pitch = d + gap;
+                columns = floor((available_x + gap)/pitch + 0.000001);
+                rows = floor(2*(available_z - d)/pitch + 0.000001) + 1;
+                x0 = (span - ((columns - 1)*pitch + d))/2 + d/2;
+                z0 = (height - ((rows - 1)*pitch/2 + d))/2 + d/2;
+                for (j = [0 : rows - 1]) {
+                    count = columns - (j % 2);
+                    if (count > 0)
+                        for (i = [0 : count - 1])
+                            translate([x0 + (i + (j % 2)/2)*pitch, z0 + j*pitch/2])
+                                polygon([[0, -d/2], [d/2, 0], [0, d/2], [-d/2, 0]]);
+                }
+            }
+        }
+    }
+
     module contur() {
         perimeter(t, 2);
-        if (side_wall_height > 0) {
-            // Match the floor's 6 x 4 mm pitch and 1.2 mm grid bars.
-            // Keep a solid frame at the top, bottom and corners of each wall.
-            frame = max(2, side_wall_thickness);
-            columns_l = floor((l - 2*frame + 1.2)/6);
-            columns_w = floor((w - 2*frame + 1.2)/6);
-            rows = floor((side_wall_height - 2*frame + 1.2)/4);
+        if (side_wall_height > 0)
             translate([0, 0, t])
                 difference() {
                     perimeter(side_wall_height, side_wall_thickness);
-                    if (rows > 0) {
-                        // Openings through the two long walls.
-                        if (columns_l > 0)
-                            for (i = [0 : columns_l - 1], j = [0 : rows - 1],
-                                 y = [-w/2, w/2 - side_wall_thickness])
-                                translate([frame + i*6, y - 0.1, frame + j*4])
-                                    cube([4.8, side_wall_thickness + 0.2, 2.8]);
-                        // Openings through the two end walls.
-                        if (columns_w > 0)
-                            for (i = [0 : columns_w - 1], j = [0 : rows - 1],
-                                 x = [0, l - side_wall_thickness])
-                                translate([x - 0.1, -w/2 + frame + i*6, frame + j*4])
-                                    cube([side_wall_thickness + 0.2, 4.8, 2.8]);
-                    }
+                    for (y = [-w/2, w/2 - side_wall_thickness])
+                        translate([0, y + side_wall_thickness + 0.1, 0])
+                            rotate([90, 0, 0])
+                                linear_extrude(height = side_wall_thickness + 0.2)
+                                    wall_holes_2d(l, side_wall_height);
+                    for (x = [0, l - side_wall_thickness])
+                        translate([x - 0.1, -w/2, 0])
+                            multmatrix([[0, 0, 1, 0], [1, 0, 0, 0],
+                                        [0, 1, 0, 0], [0, 0, 0, 1]])
+                                linear_extrude(height = side_wall_thickness + 0.2)
+                                    wall_holes_2d(w, side_wall_height);
                 }
-        }
     }
 
     // Four corner hangers. Center each upright on the long edge of the grid.
