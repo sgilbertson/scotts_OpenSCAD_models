@@ -5,13 +5,13 @@ l = 180; // Länge des Quaders jetzt 180 mm
 w = 75; // Breite des Quaders jetzt 75 mm
 
 // Thickness of the horizontal grid (mm)
-t = 3;
+bottom_grid_thickness = 3; // 0.1
 
 // Height of the side walls above the grid (mm; 0 = no raised walls)
 side_wall_height = 0;
 
 // Thickness of the raised side wall grids (mm), independent of the bottom grid
-side_wall_thickness = 2;
+side_wall_thickness = 2; // 0.1
 
 // Maximum clear diamond hole diagonal in the side walls (mm); fitted size may be smaller
 side_wall_hole_size = 4.8;
@@ -32,7 +32,7 @@ hook_fit_clearance = 0.5;
 hook_inside_height = 6;
 
 // Thickness of the hook bars, including their width along the tray length (mm)
-hook_bar_thickness = 3;
+hook_bar_thickness = 3; // 0.1
 
 $fn = 50;
 
@@ -61,18 +61,18 @@ module tray() {
         difference() {
             // Basis-Quader
             translate([0, -w/2, 0])
-                cube([l, w, t]);
+                cube([l, w, bottom_grid_thickness]);
 
             // Vertikale Streben (Abstand 6 mm)
             for (i = [0 : floor(l/6)]) {
                 translate([i*6, -w/2, 0])
-                    cube([1.2, w, t + 1]);
+                    cube([1.2, w, bottom_grid_thickness + 1]);
             }
 
             // Horizontale Streben (Abstand 4 mm)
             for (j = [0 : floor(w/4)]) {
                 translate([0, j*4 - w/2, 0])
-                    cube([l, 1.2, t + 1]);
+                    cube([l, 1.2, bottom_grid_thickness + 1]);
             }
         }
     }
@@ -81,7 +81,7 @@ module tray() {
     // Main body: Rectangular block minus grid
     difference() {
         translate([0, -w/2, 0])
-            cube([l, w, t]);
+            cube([l, w, bottom_grid_thickness]);
         kletka();
     }
 
@@ -127,9 +127,9 @@ module tray() {
     }
 
     module contur() {
-        perimeter(t, 2);
+        perimeter(bottom_grid_thickness, 2);
         if (side_wall_height > 0)
-            translate([0, 0, t])
+            translate([0, 0, bottom_grid_thickness])
                 difference() {
                     perimeter(side_wall_height, side_wall_thickness);
                     for (y = [-w/2, w/2 - side_wall_thickness])
@@ -182,7 +182,7 @@ module tray() {
         // Upright with a flared foot, retaining the original 6 mm corner offset.
         hull() {
             translate([-6, hook_reach - b, 0])
-                cube([b + 12, b, min(t, hook_depth)]);
+                cube([b + 12, b, min(bottom_grid_thickness, hook_depth)]);
             translate([0, hook_reach - b, hook_depth])
                 cube([b, b, b]);
         }
