@@ -24,12 +24,12 @@
             "hook_fit_clearance": "0.5",
             "hook_inside_height": "2",
             "hook_width": "15",
-            "l": "220",
+            "l": "225",
             "side_wall_height": "120",
             "side_wall_hole_size": "5.5",
             "side_wall_thickness": "1.6",
             "tub_inside_width": "150",
-            "w": "125"
+            "w": "120"
         }
     },
     "fileFormatVersion": "1"
