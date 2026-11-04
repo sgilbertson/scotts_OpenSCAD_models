@@ -31,8 +31,11 @@ hook_fit_clearance = 0.5;
 // Clear vertical drop from the crossbar underside to the bottom of the outer leg (mm)
 hook_inside_height = 6;
 
-// Thickness of the hook bars, including their width along the tray length (mm)
+// Thickness of the hook bars in the hook profile (mm)
 hook_bar_thickness = 3; // 0.1
+
+// Width of each hook, upright and brace along the tray length (mm)
+hook_width = 3; // 0.1
 
 $fn = 50;
 
@@ -150,19 +153,20 @@ module tray() {
     hook_reach = hook_inside_length + 2*hook_bar_thickness;
     hanger_y = w/2 + hook_reach - hook_bar_thickness/2;
     translate([6, -hanger_y, 0]) rog();
-    translate([l - 6 - hook_bar_thickness, -hanger_y, 0]) rog();
-    translate([6 + hook_bar_thickness, hanger_y, 0]) rotate([0, 0, 180]) rog();
+    translate([l - 6 - hook_width, -hanger_y, 0]) rog();
+    translate([6 + hook_width, hanger_y, 0]) rotate([0, 0, 180]) rog();
     translate([l - 6, hanger_y, 0]) rotate([0, 0, 180]) rog();
 
     module rog() {
         b = hook_bar_thickness;
+        assert(hook_width > 0, "Hook width must be positive.");
         assert(b > 0, "Hook bar thickness must be positive.");
         assert(hook_inside_length > 0, "Hook inside length must be positive.");
         assert(hook_inside_height > 0 && hook_inside_height < hook_depth,
                "Hook inside height must be positive and less than hook depth.");
         // Horizontal crossbar: its underside is exactly hook_depth above Z=0.
         translate([0, 0, hook_depth])
-            cube([b, hook_reach, b]);
+            cube([hook_width, hook_reach, b]);
         // Triangular brace in the Y/Z plane, extruded to the hook bar width.
         // Equal horizontal run and vertical rise give a 45 degree underside.
         // Its tip stops short of the tub wall by hook_fit_clearance; the
@@ -172,19 +176,19 @@ module tray() {
                         [1, 0, 0, 0],
                         [0, 1, 0, 0],
                         [0, 0, 0, 1]])
-                linear_extrude(height = b)
+                linear_extrude(height = hook_width)
                     polygon([[hook_reach - b, hook_depth - brace_run],
                              [hook_reach - b, hook_depth],
                              [hook_reach - b - brace_run, hook_depth]]);
         // Outer vertical leg; the clear opening ends at its inner face, Y=b.
         translate([0, 0, hook_depth - hook_inside_height])
-            cube([b, b, hook_inside_height + b]);
+            cube([hook_width, b, hook_inside_height + b]);
         // Upright with a flared foot, retaining the original 6 mm corner offset.
         hull() {
             translate([-6, hook_reach - b, 0])
-                cube([b + 12, b, min(bottom_grid_thickness, hook_depth)]);
+                cube([hook_width + 12, b, min(bottom_grid_thickness, hook_depth)]);
             translate([0, hook_reach - b, hook_depth])
-                cube([b, b, b]);
+                cube([hook_width, b, b]);
         }
     }
 }
